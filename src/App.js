@@ -1,23 +1,63 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import { Song, Track, Instrument } from "reactronica";
+import "./App.css";
+
+const snareSample = "/snare-top-off17.wav";
+const kickSample = "/st2_kick_one_shot_low_punch_basic.wav";
 
 function App() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [samples, setSamples] = useState(null);
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        <p>Hello Vite + React + Reactronica!</p>
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
+            {isPlaying ? "Stop" : "Play"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (samples) {
+                console.log("Clear samples");
+                setSamples(null);
+              } else {
+                console.log("Add samples");
+                setSamples({
+                  C3: kickSample,
+                  D3: snareSample,
+                });
+              }
+            }}
+          >
+            {samples ? "Remove" : "Add"} samples
+          </button>
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
       </header>
+
+      <Song isPlaying={isPlaying} bpm={90}>
+        <Track
+          steps={["C3", null, ["G3", "E3"], null]}
+          // onStepPlay={(steps) => {
+          //   console.log(steps);
+          // }}
+        >
+          <Instrument type="amSynth"></Instrument>
+        </Track>
+
+        <Track steps={samples ? ["C3", null, "D3", "C3"] : []}>
+          <Instrument
+            type="sampler"
+            samples={samples || {}}
+            // onLoad={(buffers) => {
+            //   console.log('loaded');
+            //   console.log(buffers);
+            // }}
+          ></Instrument>
+        </Track>
+      </Song>
     </div>
   );
 }
