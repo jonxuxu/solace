@@ -1,42 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Song, Track, Instrument, Effect } from "reactronica";
 import "./App.css";
 
-const snareSample = "/snare-top-off17.wav";
-const kickSample = "/st2_kick_one_shot_low_punch_basic.wav";
 const deepSynth = "/deepAmbience.wav";
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [samples, setSamples] = useState(null);
+  const [audio] = useState(new Audio(deepSynth));
+
+  useEffect(() => {
+    audio.addEventListener(
+      "ended",
+      function () {
+        this.currentTime = 0;
+        this.play();
+      },
+      false
+    );
+  }, []);
+
+  useEffect(() => {
+    isPlaying ? audio.play() : audio.pause();
+  }, [isPlaying]);
 
   return (
     <div className="App">
       <header className="App-header">
-        <p>Hello Vite + React + Reactronica!</p>
+        <p>Deep Vibes</p>
         <p>
           <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
             {isPlaying ? "Stop" : "Play"}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (samples) {
-                console.log("Clear samples");
-                setSamples(null);
-              } else {
-                console.log("Add samples");
-                setSamples({
-                  C3: deepSynth,
-                });
-              }
-            }}
-          >
-            {samples ? "Remove" : "Add"} samples
-          </button>
         </p>
       </header>
 
+      {/* Background ambience */}
+
+      {/* Our Main song, dynamic interaction */}
       <Song isPlaying={isPlaying} bpm={60}>
         {/* <Track steps={["C3", "G3", "E3", "A3"]}>
           <Instrument type="synth" />
@@ -47,7 +47,7 @@ function App() {
           <Effect type="autoFilter" />
         </Track> */}
 
-        <Track steps={[{ name: "C3", duration: 30, velocity: 1 }]}>
+        {/* <Track steps={[{ name: "C3", duration: 30, velocity: 1 }]}>
           <Instrument
             type="sampler"
             samples={{
@@ -58,7 +58,7 @@ function App() {
             //   console.log(buffers);
             // }}
           ></Instrument>
-        </Track>
+        </Track> */}
       </Song>
     </div>
   );
