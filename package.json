@@ -12,7 +12,9 @@
     "react-scripts": "5.0.1",
     "reactronica": "^0.7.0",
     "tone": "^14.7.77",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "y-websocket": "^1.4.4",
+    "yjs": "^13.5.41"
   },
   "scripts": {
     "start": "react-scripts start",

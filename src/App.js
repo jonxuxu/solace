@@ -1,28 +1,50 @@
 import React, { useState, useEffect } from "react";
 import { Song, Track, Instrument, Effect } from "reactronica";
+import * as Y from "yjs";
+import { WebsocketProvider } from "y-websocket";
 import "./App.css";
 import Canvas from "./Canvas"
 
 const deepSynth = "/deepAmbience.wav";
+
+const doc = new Y.Doc();
+const wsProvider = new WebsocketProvider(
+  "ws://44.207.249.52:1234",
+  "my-roomname",
+  doc
+);
+
+wsProvider.on("status", (event) => {
+  console.log(event.status); // logs "connected" or "disconnected"
+});
+
+const awareness = wsProvider.awareness;
+
+awareness.on("change", () => {
+  // Map each awareness state to a dom-string
+  console.log(Array.from(awareness.getStates().values()));
+});
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio] = useState(new Audio(deepSynth));
 
   useEffect(() => {
-    audio.addEventListener(
-      "ended",
-      function () {
+    audio.addEventListener("timeupdate", function () {
+      var buffer = 0.35;
+      if (this.currentTime > this.duration - buffer) {
         this.currentTime = 0;
         this.play();
-      },
-      false
-    );
+      }
+    });
   }, []);
 
   useEffect(() => {
     isPlaying ? audio.play() : audio.pause();
-  }, [isPlaying]);
+    awareness.setLocalStateField("playMusic", {
+      value: isPlaying ? 1 : 0,
+    });
+  }, [isPlaying, audio]);
 
   return (
     <div className="App">
@@ -41,13 +63,9 @@ function App() {
 
       {/* Our Main song, dynamic interaction */}
       <Song isPlaying={isPlaying} bpm={60}>
-        {/* <Track steps={["C3", "G3", "E3", "A3"]}>
+        {/* <Track steps={["G3", null, null, "A3"]}>
           <Instrument type="synth" />
-          // Distortion effect
-          <Effect type="distortion" wet={0.2} />
-          // Add more to chain effects together
           <Effect type="feedbackDelay" wet={0.3} />
-          <Effect type="autoFilter" />
         </Track> */}
 
         {/* <Track steps={[{ name: "C3", duration: 30, velocity: 1 }]}>
