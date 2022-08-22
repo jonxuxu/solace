@@ -19,10 +19,11 @@ function Canvas({ awareness }) {
         if (canvasInfo) {
           const click = canvasInfo.newClick;
           if (click) {
+						const now = Date.now();
             bigRipples.push(
-              { x: click.x, y: click.y, startTime: click.time },
-              { x: click.x, y: click.y, startTime: click.time + 200 },
-              { x: click.x, y: click.y, startTime: click.time + 400 }
+              { x: click.x, y: click.y, startTime: now },
+              { x: click.x, y: click.y, startTime: now + 200 },
+              { x: click.x, y: click.y, startTime: now + 400 }
             );
           }
         }
@@ -71,7 +72,6 @@ function Canvas({ awareness }) {
       newClick: {
         x: p5.mouseX,
         y: p5.mouseY,
-        time: Date.now(),
       },
     });
   };
