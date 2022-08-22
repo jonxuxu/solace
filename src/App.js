@@ -45,7 +45,9 @@ awareness.on("change", ({ updated }) => {
 
 function playNote() {
   const audio = new Audio(notes[Math.floor(Math.random() * notes.length)]);
-  audio.play();
+	audio.addEventListener("canplaythrough", (event) => {
+		audio.play();
+	});
 }
 
 function App() {
