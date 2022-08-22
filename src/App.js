@@ -9,8 +9,7 @@ const deepSynth = "/deepAmbience.wav";
 
 const doc = new Y.Doc();
 const wsProvider = new WebsocketProvider(
-  //"ws://44.207.249.52:1234",
-	"ws://localhost:1234",
+  "ws://44.207.249.52:1234",
   "my-roomname",
   doc
 );
@@ -20,11 +19,6 @@ wsProvider.on("status", (event) => {
 });
 
 const awareness = wsProvider.awareness;
-
-awareness.on("change", () => {
-  // Map each awareness state to a dom-string
-  console.log(Array.from(awareness.getStates().values()));
-});
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -50,7 +44,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-				<Canvas doc={doc} />
+				<Canvas awareness={awareness} />
 
         <p>Deep Vibes</p>
         <p>

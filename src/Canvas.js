@@ -2,16 +2,28 @@ import React from "react";
 import Sketch from "react-p5";
 import * as Y from 'yjs'
 
-let smallRipples = [];
-
 const rippleSpeed = 0.1;
 const bigRippleMaxSize = 300;
 const smallRippleMaxSize = 80;
 
-function Canvas(props) {
-	const bigRipples = props.doc.getArray('bigRipples');
-	bigRipples.observe(event => {
-	  console.log('changes', event.changes.keys)
+function Canvas({ awareness }) {
+	let bigRipples = [];
+	let smallRipples = [];
+
+	awareness.on("change", ({ updated }) => {
+		console.log("(canvas) updated", updated);
+		if (updated) {
+			const states = awareness.getStates();
+			updated.forEach((key) => { // key is the clientID
+				const state = states.get(key); // state is updated awareness state
+				const { canvasInfo } = state;
+				if (canvasInfo) {
+					if (canvasInfo.newBigRipple) {
+						bigRipples.push(canvasInfo.newBigRipple);
+					}
+				}
+			});
+		}
 	});
 
 	const setup = (p5, canvasParentRef) => {
@@ -25,27 +37,26 @@ function Canvas(props) {
 		p5.fill(0, 0);
 		p5.strokeWeight(3);
 		for (let i = bigRipples.length - 1; i >= 0; i--) {
-			let ripple = bigRipples.get(i);
+			let ripple = bigRipples[i];
 			let time = now - ripple.startTime;
 			if (time > 0) {
 				let keep = drawBigRipple(p5, ripple, time);
 				if (!keep) {
-					bigRipples.delete(i, 1);
+					bigRipples.splice(i, 1);
 				}
 			}
 		}
 
 		p5.strokeWeight(2);
 		for (let i = smallRipples.length - 1; i >= 0; i--) {
-			let time = now - smallRipples[i].startTime;
+			let time = now - smallRipples.get(i).startTime;
 			if (time > 0) {
-				let keep = drawSmallRipple(p5, smallRipples[i], time);
+				let keep = drawSmallRipple(p5, smallRipples.get(i), time);
 				if (!keep) {
-					smallRipples.splice(i, 1);
+					smallRipples.delete(i, 1);
 				}
 			}
 		}
-
 	};
 
 	const mousePressed = (p5) => {
@@ -53,16 +64,15 @@ function Canvas(props) {
 		let y = p5.mouseY;
 		let now = Date.now();
 
-		bigRipples.push([
-			{ x: x, y: y, startTime: now, },
-			{ x: x, y: y, startTime: now + 200, },
-			{ x: x, y: y, startTime: now + 400, },
-		]);
-
+		awareness.setLocalStateField("canvasInfo", { newBigRipple: { x: x, y: y, startTime: now } });
+		awareness.setLocalStateField("canvasInfo", { newBigRipple: { x: x, y: y, startTime: now + 200 } });
+		awareness.setLocalStateField("canvasInfo", { newBigRipple: { x: x, y: y, startTime: now + 400 } });
 		/*
-		smallRipples.push(
-			{ x: x, y: y, startTime: now, },
-		);
+		bigRipples.push([
+			{ x: x, y: y, startTime: now },
+			{ x: x, y: y, startTime: now + 200 },
+			{ x: x, y: y, startTime: now + 400 },
+		]);
 		*/
 	};
 
