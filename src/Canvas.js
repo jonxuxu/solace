@@ -1,19 +1,30 @@
 import React from "react";
 import Sketch from "react-p5";
 
-let x = 50;
-let y = 50;
+let ripples = [{
+	x: 100,
+	y: 100,
+}];
 
 export default (props) => {
 	const setup = (p5, canvasParentRef) => {
-		p5.createCanvas(500, 500).parent(canvasParentRef);
+		let cnv = p5.createCanvas(500, 500).parent(canvasParentRef);
 	};
 
 	const draw = (p5) => {
 		p5.background(0);
-		p5.ellipse(x, y, 70, 70);
-		x++;
+		for (let i = 0; i < ripples.length; i++) {
+			p5.ellipse(ripples[i].x, ripples[i].y, 70, 70);
+		}
 	};
 
-	return <Sketch setup={setup} draw={draw} />;
+	const mousePressed = (p5) => {
+		console.log(p5.mouseX, p5.mouseY);
+		ripples.push({
+			x: p5.mouseX,
+			y: p5.mouseY,
+		});
+	};
+
+	return <Sketch setup={setup} draw={draw} mousePressed={mousePressed} />;
 };
