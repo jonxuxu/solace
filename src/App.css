@@ -34,5 +34,9 @@
     transition: all 0.2s ease-in-out;
     z-index: 1;
     font-family: 'Crimson Text', serif;
-
+    -webkit-transition: opacity 3s ease-in-out;
+    -moz-transition: opacity 3s ease-in-out;
+    -ms-transition: opacity 3s ease-in-out;
+    -o-transition: opacity 3s ease-in-out;
+     opacity: 1;
   }

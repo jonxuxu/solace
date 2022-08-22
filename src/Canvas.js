@@ -2,13 +2,17 @@ import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
 
-const rippleSpeed = 0.05;
+// constant parameters to control animation
+const bigRippleSpeed = 0.1;
+const smallRippleSpeed = 0.03;
 const bigRippleMaxSize = 300;
 const smallRippleMaxSize = 80;
 
 function Canvas({ awareness }) {
   let bigRipples = [];
   let smallRipples = [];
+
+  let lastSmallRipple = null;
 
   const mousePressed = (p5) => {
     awareness.setLocalStateField("canvasInfo", {
@@ -55,15 +59,7 @@ function Canvas({ awareness }) {
     const now = Date.now();
     p5.background(0);
 
-    if (p5.frameCount % 10 === 0) {
-      awareness.setLocalStateField("canvasInfo", {
-        mouse: {
-          x: p5.mouseX,
-          y: p5.mouseY,
-          timestamp: Date.now(), // only used to ensure uniqueness
-        },
-      });
-    }
+    newSmallRipple(p5);
 
     p5.fill(0, 0);
     p5.strokeWeight(3);
@@ -91,7 +87,7 @@ function Canvas({ awareness }) {
   };
 
   const drawBigRipple = (p5, ripple, time) => {
-    let radius = time * rippleSpeed;
+    let radius = time * bigRippleSpeed;
     if (radius < bigRippleMaxSize) {
       let alpha = (bigRippleMaxSize - radius) * 0.5;
       p5.stroke(255, alpha);
@@ -102,7 +98,7 @@ function Canvas({ awareness }) {
   };
 
   const drawSmallRipple = (p5, ripple, time) => {
-    let radius = time * rippleSpeed + 5;
+    let radius = time * smallRippleSpeed + 5;
     if (radius < smallRippleMaxSize) {
       let alpha = (smallRippleMaxSize - radius) * 2.0;
       p5.stroke(255, alpha);
@@ -110,6 +106,28 @@ function Canvas({ awareness }) {
       return true;
     }
     return false;
+  };
+
+  const newSmallRipple = (p5) => {
+    if (lastSmallRipple) {
+      const x1 = lastSmallRipple.x;
+      const y1 = lastSmallRipple.y;
+      const t1 = lastSmallRipple.startTime;
+      const x2 = p5.mouseX;
+      const y2 = p5.mouseY;
+      const t2 = Date.now();
+      const dt = t2 - t1;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (dt / 2000 + d / 20 > 1) {
+        lastSmallRipple = { x: x2, y: y2, startTime: t2 };
+        awareness.setLocalStateField("canvasInfo", { mouse: lastSmallRipple });
+      }
+    } else {
+      lastSmallRipple = { x: p5.mouseX, y: p5.mouseY, startTime: Date.now() };
+      awareness.setLocalStateField("canvasInfo", { mouse: lastSmallRipple });
+    }
   };
 
   return (
