@@ -3,6 +3,7 @@ import { Song, Track, Instrument, Effect } from "reactronica";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import "./App.css";
+import Canvas from "./Canvas";
 
 const deepSynth = "/deepAmbience.wav";
 const notes = [
@@ -29,15 +30,23 @@ wsProvider.on("status", (event) => {
 const awareness = wsProvider.awareness;
 
 awareness.on("change", ({ updated }) => {
-  // Map each awareness state to a dom-string
-  // console.log(Array.from(awareness.getStates().values()));
   if (updated) {
-    const usr = updated[0];
-    const update = awareness.getStates().get(usr);
-    console.log(update);
-    const cursorclick = update["cursorclick"];
+    const states = awareness.getStates();
+    updated.forEach((key) => {
+      // key is the clientID
+      const state = states.get(key); // state is updated awareness state
+      const { canvasInfo } = state;
+      if (canvasInfo) {
+        playNote();
+      }
+    });
   }
 });
+
+function playNote() {
+  const audio = new Audio(notes[Math.floor(Math.random() * notes.length)]);
+  audio.play();
+}
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -51,25 +60,20 @@ function App() {
         this.play();
       }
     });
+    audio.volume = 0.2;
   }, []);
 
   useEffect(() => {
     isPlaying ? audio.play() : audio.pause();
-    awareness.setLocalStateField("playMusic", {
-      value: isPlaying ? 1 : 0,
-    });
   }, [isPlaying, audio]);
 
   return (
     <div className="App">
-      <header className="App-header">
-        <p>Deep Vibes</p>
-        <p>
-          <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
-            {isPlaying ? "Stop" : "Play"}
-          </button>
-        </p>
-      </header>
+      <Canvas awareness={awareness} />
+
+      <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
+        {isPlaying ? "Stop" : "Play"}
+      </button>
 
       {/* Background ambience */}
 
