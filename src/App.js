@@ -45,9 +45,9 @@ awareness.on("change", ({ updated }) => {
 
 function playNote() {
   const audio = new Audio(notes[Math.floor(Math.random() * notes.length)]);
-	audio.addEventListener("canplaythrough", (event) => {
-		audio.play();
-	});
+  audio.addEventListener("canplaythrough", (event) => {
+    audio.play();
+  });
 }
 
 function App() {
@@ -74,7 +74,7 @@ function App() {
       <Canvas awareness={awareness} />
       {!isPlaying && (
         <button onClick={() => setIsPlaying(!isPlaying)} className="Start">
-          Start
+          to float in the depths
         </button>
       )}
 
