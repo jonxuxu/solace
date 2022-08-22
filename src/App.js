@@ -6,23 +6,22 @@ const deepSynth = "/deepAmbience.wav";
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioContext] = useState(new AudioContext());
-  const [source] = useState(audioContext.createBufferSource());
+  const audio = new Audio(deepSynth);
 
   useEffect(() => {
-    fetch(deepSynth)
-      .then((res) => res.arrayBuffer())
-      .then((ArrayBuffer) => audioContext.decodeAudioData(ArrayBuffer))
-      .then((audioBuffer) => {
-        source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
-        source.loop = true;
-      });
+    audio.addEventListener("timeupdate", function () {
+      var buffer = 0.35;
+      if (this.currentTime > this.duration - buffer) {
+        this.currentTime = 0;
+        this.play();
+      }
+    });
   }, []);
 
   useEffect(() => {
-    isPlaying ? audioContext.resume() : audioContext.suspend();
-  }, [isPlaying, audioContext]);
+    isPlaying ? audio.play() : audio.pause();
+    console.log(isPlaying);
+  }, [isPlaying, audio]);
 
   return (
     <div className="App">
