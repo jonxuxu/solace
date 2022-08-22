@@ -5,6 +5,15 @@ import { WebsocketProvider } from "y-websocket";
 import "./App.css";
 
 const deepSynth = "/deepAmbience.wav";
+const notes = [
+  "/gsharp.wav",
+  "/asharp.wav",
+  "/b.wav",
+  "/csharp.wav",
+  "/dsharp.wav",
+  "/e.wav",
+  "/fsharp.wav",
+];
 
 const doc = new Y.Doc();
 const wsProvider = new WebsocketProvider(
@@ -19,9 +28,15 @@ wsProvider.on("status", (event) => {
 
 const awareness = wsProvider.awareness;
 
-awareness.on("change", () => {
+awareness.on("change", ({ updated }) => {
   // Map each awareness state to a dom-string
-  console.log(Array.from(awareness.getStates().values()));
+  // console.log(Array.from(awareness.getStates().values()));
+  if (updated) {
+    const usr = updated[0];
+    const update = awareness.getStates().get(usr);
+    console.log(update);
+    const cursorclick = update["cursorclick"];
+  }
 });
 
 function App() {
