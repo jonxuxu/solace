@@ -9,14 +9,13 @@ function App() {
   const [audio] = useState(new Audio(deepSynth));
 
   useEffect(() => {
-    audio.addEventListener(
-      "ended",
-      function () {
+    audio.addEventListener("timeupdate", function () {
+      var buffer = 0.35;
+      if (this.currentTime > this.duration - buffer) {
         this.currentTime = 0;
         this.play();
-      },
-      false
-    );
+      }
+    });
   }, []);
 
   useEffect(() => {
