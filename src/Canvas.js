@@ -1,10 +1,9 @@
 import React from "react";
 import Sketch from "react-p5";
 
-let ripples = [{
-	x: 100,
-	y: 100,
-}];
+let ripples = [];
+const rippleSpeed = 0.1;
+const rippleMaxSize = 300;
 
 export default (props) => {
 	const setup = (p5, canvasParentRef) => {
@@ -12,19 +11,45 @@ export default (props) => {
 	};
 
 	const draw = (p5) => {
+		const now = Date.now();
 		p5.background(0);
+
+		p5.fill(0, 0);
+		p5.strokeWeight(3);
 		for (let i = 0; i < ripples.length; i++) {
-			p5.ellipse(ripples[i].x, ripples[i].y, 70, 70);
+			let time = now - ripples[i].startTime;
+			if (time > 0) {
+				let keep = drawRipple(p5, ripples[i], time);
+				if (!keep) {
+					ripples.splice(i, 1);
+					i--;
+				}
+			}
 		}
 	};
 
 	const mousePressed = (p5) => {
-		console.log(p5.mouseX, p5.mouseY);
-		ripples.push({
-			x: p5.mouseX,
-			y: p5.mouseY,
-		});
+		let x = p5.mouseX;
+		let y = p5.mouseY;
+		let now = Date.now();
+
+		ripples.push(
+			{ x: x, y: y, startTime: now, },
+			{ x: x, y: y, startTime: now + 200, },
+			{ x: x, y: y, startTime: now + 400, },
+		);
 	};
+
+	const drawRipple = (p5, ripple, time) => {
+		let radius = time * rippleSpeed;
+		if (radius < rippleMaxSize) {
+			let alpha = (rippleMaxSize - radius) * 0.5;
+			p5.stroke(255, alpha);
+			p5.ellipse(ripple.x, ripple.y, radius);
+			return true;
+		}
+		return false;
+	}
 
 	return <Sketch setup={setup} draw={draw} mousePressed={mousePressed} />;
 };
