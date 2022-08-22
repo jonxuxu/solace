@@ -70,10 +70,11 @@ function App() {
   return (
     <div className="App">
       <Canvas awareness={awareness} />
-
-      <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
-        {isPlaying ? "Stop" : "Play"}
-      </button>
+      {!isPlaying && (
+        <button onClick={() => setIsPlaying(!isPlaying)} className="Start">
+          Start
+        </button>
+      )}
 
       {/* Background ambience */}
 

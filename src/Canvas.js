@@ -1,5 +1,6 @@
 import React from "react";
 import Sketch from "react-p5";
+import "./App.css";
 
 const rippleSpeed = 0.1;
 const bigRippleMaxSize = 300;
@@ -19,7 +20,7 @@ function Canvas({ awareness }) {
         if (canvasInfo) {
           const click = canvasInfo.newClick;
           if (click) {
-						const now = Date.now();
+            const now = Date.now();
             bigRipples.push(
               { x: click.x, y: click.y, startTime: now },
               { x: click.x, y: click.y, startTime: now + 200 },
@@ -34,8 +35,7 @@ function Canvas({ awareness }) {
   const setup = (p5, canvasParentRef) => {
     let width = canvasParentRef.offsetWidth;
     let height = canvasParentRef.offsetHeight;
-    console.log(width, height);
-    let cnv = p5.createCanvas(width, 500).parent(canvasParentRef);
+    let cnv = p5.createCanvas(width, height).parent(canvasParentRef);
   };
 
   const draw = (p5) => {
@@ -98,7 +98,14 @@ function Canvas({ awareness }) {
     return false;
   };
 
-  return <Sketch setup={setup} draw={draw} mousePressed={mousePressed} />;
+  return (
+    <Sketch
+      setup={setup}
+      draw={draw}
+      mousePressed={mousePressed}
+      className="Canvas"
+    />
+  );
 }
 
 export default Canvas;
