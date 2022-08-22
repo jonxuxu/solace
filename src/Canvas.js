@@ -17,8 +17,13 @@ function Canvas({ awareness }) {
         const state = states.get(key); // state is updated awareness state
         const { canvasInfo } = state;
         if (canvasInfo) {
-          if (canvasInfo.newBigRipple) {
-            bigRipples.push(canvasInfo.newBigRipple);
+          const click = canvasInfo.newClick;
+          if (click) {
+            bigRipples.push(
+              { x: click.x, y: click.y, startTime: click.time },
+              { x: click.x, y: click.y, startTime: click.time + 200 },
+              { x: click.x, y: click.y, startTime: click.time + 400 }
+            );
           }
         }
       });
@@ -62,26 +67,13 @@ function Canvas({ awareness }) {
   };
 
   const mousePressed = (p5) => {
-    let x = p5.mouseX;
-    let y = p5.mouseY;
-    let now = Date.now();
-
     awareness.setLocalStateField("canvasInfo", {
-      newBigRipple: { x: x, y: y, startTime: now },
+      newClick: {
+        x: p5.mouseX,
+        y: p5.mouseY,
+        time: Date.now(),
+      },
     });
-    awareness.setLocalStateField("canvasInfo", {
-      newBigRipple: { x: x, y: y, startTime: now + 200 },
-    });
-    awareness.setLocalStateField("canvasInfo", {
-      newBigRipple: { x: x, y: y, startTime: now + 400 },
-    });
-    /*
-		bigRipples.push([
-			{ x: x, y: y, startTime: now },
-			{ x: x, y: y, startTime: now + 200 },
-			{ x: x, y: y, startTime: now + 400 },
-		]);
-		*/
   };
 
   const drawBigRipple = (p5, ripple, time) => {
