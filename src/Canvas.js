@@ -15,7 +15,7 @@ function Canvas({ awareness }) {
       click: {
         x: p5.mouseX,
         y: p5.mouseY,
-				timestamp: Date.now(),	// only used to ensure uniqueness
+        timestamp: Date.now(), // only used to ensure uniqueness
       },
     });
   };
@@ -27,7 +27,7 @@ function Canvas({ awareness }) {
         const state = states.get(clientID);
         const { canvasInfo } = state;
         if (canvasInfo) {
-					const { click, mouse } = canvasInfo;
+          const { click, mouse } = canvasInfo;
           if (click) {
             const now = Date.now();
             bigRipples.push(
@@ -36,12 +36,10 @@ function Canvas({ awareness }) {
               { x: click.x, y: click.y, startTime: now + 400 }
             );
           }
-					if (mouse) {
-						const now = Date.now();
-						smallRipples.push(
-							{ x: mouse.x, y: mouse.y, startTime: now },
-						);
-					}
+          if (mouse) {
+            const now = Date.now();
+            smallRipples.push({ x: mouse.x, y: mouse.y, startTime: now });
+          }
         }
       });
     }
@@ -57,15 +55,15 @@ function Canvas({ awareness }) {
     const now = Date.now();
     p5.background(0);
 
-		if (p5.frameCount % 10 === 0) {
-			awareness.setLocalStateField("canvasInfo", {
-				mouse: {
-					x: p5.mouseX,
-					y: p5.mouseY,
-					timestamp: Date.now(),	// only used to ensure uniqueness
-				},
-			});
-		}
+    if (p5.frameCount % 10 === 0) {
+      awareness.setLocalStateField("canvasInfo", {
+        mouse: {
+          x: p5.mouseX,
+          y: p5.mouseY,
+          timestamp: Date.now(), // only used to ensure uniqueness
+        },
+      });
+    }
 
     p5.fill(0, 0);
     p5.strokeWeight(3);

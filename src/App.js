@@ -74,7 +74,7 @@ function App() {
       <Canvas awareness={awareness} />
       {!isPlaying && (
         <button onClick={() => setIsPlaying(!isPlaying)} className="Start">
-          to float in the depths
+          wrap me in the deep
         </button>
       )}
 
