@@ -6,7 +6,7 @@ const deepSynth = "/deepAmbience.wav";
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const audio = new Audio(deepSynth);
+  const [audio] = useState(new Audio(deepSynth));
 
   useEffect(() => {
     audio.addEventListener("timeupdate", function () {
