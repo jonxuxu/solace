@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Song, Track, Instrument, Effect } from "reactronica";
 import "./App.css";
+import Canvas from "./Canvas"
 
 const snareSample = "/snare-top-off17.wav";
 const kickSample = "/st2_kick_one_shot_low_punch_basic.wav";
@@ -13,6 +14,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+				<Canvas />
         <p>Hello Vite + React + Reactronica!</p>
         <p>
           <button type="button" onClick={() => setIsPlaying(!isPlaying)}>
