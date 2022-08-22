@@ -6,22 +6,23 @@ const deepSynth = "/deepAmbience.wav";
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(deepSynth));
+  const [audioContext] = useState(new AudioContext());
+  const [source] = useState(audioContext.createBufferSource());
 
   useEffect(() => {
-    audio.addEventListener(
-      "ended",
-      function () {
-        this.currentTime = 0;
-        this.play();
-      },
-      false
-    );
+    fetch(deepSynth)
+      .then((res) => res.arrayBuffer())
+      .then((ArrayBuffer) => audioContext.decodeAudioData(ArrayBuffer))
+      .then((audioBuffer) => {
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+        source.loop = true;
+      });
   }, []);
 
   useEffect(() => {
-    isPlaying ? audio.play() : audio.pause();
-  }, [isPlaying]);
+    isPlaying ? audioContext.resume() : audioContext.suspend();
+  }, [isPlaying, audioContext]);
 
   return (
     <div className="App">
@@ -38,13 +39,9 @@ function App() {
 
       {/* Our Main song, dynamic interaction */}
       <Song isPlaying={isPlaying} bpm={60}>
-        {/* <Track steps={["C3", "G3", "E3", "A3"]}>
+        {/* <Track steps={["G3", null, null, "A3"]}>
           <Instrument type="synth" />
-          // Distortion effect
-          <Effect type="distortion" wet={0.2} />
-          // Add more to chain effects together
           <Effect type="feedbackDelay" wet={0.3} />
-          <Effect type="autoFilter" />
         </Track> */}
 
         {/* <Track steps={[{ name: "C3", duration: 30, velocity: 1 }]}>
