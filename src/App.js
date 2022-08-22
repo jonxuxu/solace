@@ -1,8 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Song, Track, Instrument, Effect } from "reactronica";
+import * as Y from "yjs";
+import { WebsocketProvider } from "y-websocket";
 import "./App.css";
 
 const deepSynth = "/deepAmbience.wav";
+
+const doc = new Y.Doc();
+const wsProvider = new WebsocketProvider(
+  "ws://44.207.249.52:1234",
+  "my-roomname",
+  doc
+);
+
+wsProvider.on("status", (event) => {
+  console.log(event.status); // logs "connected" or "disconnected"
+});
+
+const awareness = wsProvider.awareness;
+
+awareness.on("change", () => {
+  // Map each awareness state to a dom-string
+  console.log(Array.from(awareness.getStates().values()));
+});
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -20,7 +40,9 @@ function App() {
 
   useEffect(() => {
     isPlaying ? audio.play() : audio.pause();
-    console.log(isPlaying);
+    awareness.setLocalStateField("playMusic", {
+      value: isPlaying ? 1 : 0,
+    });
   }, [isPlaying, audio]);
 
   return (
