@@ -9,7 +9,8 @@ const deepSynth = "/deepAmbience.wav";
 
 const doc = new Y.Doc();
 const wsProvider = new WebsocketProvider(
-  "ws://44.207.249.52:1234",
+  //"ws://44.207.249.52:1234",
+	"ws://localhost:1234",
   "my-roomname",
   doc
 );
@@ -49,7 +50,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-				<Canvas />
+				<Canvas doc={doc} />
 
         <p>Deep Vibes</p>
         <p>
