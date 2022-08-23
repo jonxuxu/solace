@@ -19,7 +19,7 @@ const notes = [
 
 const doc = new Y.Doc();
 const wsProvider = new WebsocketProvider(
-  "ws://vibes.jonathanxu.com:1234",
+  "wss://vibes.jonathanxu.com:1234",
   "my-roomname",
   doc
 );
