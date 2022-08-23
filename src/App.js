@@ -65,35 +65,6 @@ function App() {
     audio.volume = 0.2;
   }, []);
 
-  useEffect(() => {
-    const startPlaying = () => {
-      const fadeAudio = setInterval(() => {
-        if (audio.volume !== 4) {
-          audio.volume += 0.02;
-        }
-
-        if (audio.volume > 0.38) {
-          clearInterval(fadeAudio);
-        }
-      }, 200);
-      audio.play();
-    };
-    const stopPlaying = () => {
-      const fadeAudio = setInterval(() => {
-        if (audio.volume !== 0) {
-          audio.volume -= 0.02;
-        }
-
-        if (audio.volume < 0.02) {
-          clearInterval(fadeAudio);
-        }
-      }, 200);
-      audio.pause();
-    };
-
-    isPlaying ? startPlaying() : stopPlaying();
-  }, [isPlaying, audio]);
-
   return (
     <MainDiv>
       {isPlaying ? (
@@ -103,9 +74,19 @@ function App() {
           onClick={() => {
             setFade(true);
             setTimeout(() => {
-              setIsPlaying(!isPlaying);
+              audio.volume = 0;
+              const fadeAudio = setInterval(() => {
+                if (audio.volume !== 4) {
+                  audio.volume += 0.02;
+                }
+
+                if (audio.volume > 0.38) {
+                  clearInterval(fadeAudio);
+                }
+              }, 200);
+              audio.play();
+              setIsPlaying(true);
             }, 2000);
-            // audio.volume = 0.4;
             // audio.play();
           }}
           visible={!fade}
