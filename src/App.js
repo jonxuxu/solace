@@ -58,7 +58,7 @@ function App() {
 
   useEffect(() => {
     window.addEventListener(
-      "touchstart",
+      "touchend",
       function () {
         // create empty buffer
         var buffer = audio.createBuffer(1, 1, 22050);
