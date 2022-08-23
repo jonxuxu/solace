@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Song, Track, Instrument, Effect } from "reactronica";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
@@ -84,7 +84,7 @@ function App() {
     audio.volume = 0.2;
   }, []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const startPlaying = () => {
       const fadeAudio = setInterval(() => {
         if (audio.volume !== 4) {
@@ -121,9 +121,11 @@ function App() {
         <StartButton
           onClick={() => {
             setFade(true);
-            setTimeout(() => {
-              setIsPlaying(!isPlaying);
-            }, 2000);
+            // setTimeout(() => {
+            //   setIsPlaying(!isPlaying);
+            // }, 2000);
+            audio.volume = 0.4;
+            audio.play();
           }}
           visible={!fade}
         >
