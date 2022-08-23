@@ -57,23 +57,6 @@ function App() {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    window.addEventListener(
-      "touchend",
-      function () {
-        // create empty buffer
-        var buffer = audio.createBuffer(1, 1, 22050);
-        var source = audio.createBufferSource();
-        source.buffer = buffer;
-
-        // connect to output (your speakers)
-        source.connect(audio.destination);
-
-        // play the file
-        source.noteOn(0);
-      },
-      false
-    );
-
     audio.addEventListener("timeupdate", function () {
       var buffer = 0.35;
       if (this.currentTime > this.duration - buffer) {
