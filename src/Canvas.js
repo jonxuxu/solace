@@ -16,15 +16,41 @@ function Canvas({ awareness }) {
   let bigRipples = [];
   let smallRipples = [];
   let mousePaths = {};
+  let holdState = 0;
+  let holdTimer = null;
+  const clientId = awareness.clientID;
 
   const mousePressed = (p5) => {
     awareness.setLocalStateField("canvasInfo", {
-      click: {
+      smallRipple: {
         x: p5.mouseX,
         y: p5.mouseY,
         timestamp: Date.now(), // only used to ensure uniqueness
       },
     });
+    // Linearly increment the hold state until it reaches 100 in 2 seconds
+    holdTimer = setInterval(() => {
+      if (holdState < 100) {
+        holdState += 10;
+      } else {
+        clearInterval(holdTimer);
+        holdState = 0;
+        // Scream
+        const now = Date.now();
+        awareness.setLocalStateField("canvasInfo", {
+          bigRipple: {
+            x: p5.mouseX,
+            y: p5.mouseY,
+            timestamp: Date.now(), // only used to ensure uniqueness
+          },
+        });
+      }
+    }, 100);
+  };
+
+  const mouseReleased = () => {
+    clearInterval(holdTimer);
+    holdState = 0;
   };
 
   awareness.on("change", ({ updated }) => {
@@ -33,20 +59,23 @@ function Canvas({ awareness }) {
       updated.forEach((clientID) => {
         const { canvasInfo } = states.get(clientID);
         if (canvasInfo) {
-          const { click, mouse } = canvasInfo;
-          if (click) {
+          const { smallRipple, bigRipple, mouse } = canvasInfo;
+          if (smallRipple) {
             const now = Date.now();
-            // bigRipples.push(
-            //   { x: click.x, y: click.y, startTime: now },
-            //   { x: click.x, y: click.y, startTime: now + 100 },
-            //   { x: click.x, y: click.y, startTime: now + 200 },
-            // );
-            console.log("click");
             smallRipples.push({
-              x: click.x,
-              y: click.y,
+              x: smallRipple.x,
+              y: smallRipple.y,
               startTime: now,
             });
+          }
+          if (bigRipple) {
+            const now = Date.now();
+
+            bigRipples.push(
+              { x: bigRipple.x, y: bigRipple.y, startTime: now },
+              { x: bigRipple.x, y: bigRipple.y, startTime: now + 100 },
+              { x: bigRipple.x, y: bigRipple.y, startTime: now + 200 }
+            );
           }
           if (mouse) {
             if (!mousePaths[clientID]) {
@@ -118,16 +147,24 @@ function Canvas({ awareness }) {
         x: p5.mouseX,
         y: p5.mouseY,
         timestamp: now,
+        holdState: holdState,
       },
     });
 
-    p5.fill(255, cursorAlpha);
     p5.noStroke();
-    Array.from(awareness.getStates().values()).forEach(({ canvasInfo }) => {
+    awareness.getStates().forEach((value, key) => {
+      const { canvasInfo } = value;
       if (canvasInfo) {
-        let mouse = canvasInfo.mouse;
+        let { mouse } = canvasInfo;
         if (mouse) {
-          p5.ellipse(mouse.x, mouse.y, cursorRadius);
+          let color = p5.color(
+            255,
+            cursorAlpha + ((255 - cursorAlpha) * mouse.holdState) / 100
+          );
+          let radius = cursorRadius + (cursorRadius * mouse.holdState) / 100;
+
+          p5.fill(color);
+          p5.ellipse(mouse.x, mouse.y, radius);
         }
       }
     });
@@ -203,6 +240,7 @@ function Canvas({ awareness }) {
       setup={setup}
       draw={draw}
       mousePressed={mousePressed}
+      mouseReleased={mouseReleased}
       className="Canvas"
     />
   );
