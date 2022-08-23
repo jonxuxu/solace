@@ -6,16 +6,44 @@ import "./App.css";
 const cursorRadius = 6;
 const cursorAlpha = 100;
 const bigRippleSpeed = 50;
-const smallRippleSpeed = 20;
 const bigRippleMaxTime = 3;
-const smallRippleMaxTime = 3;
 const bigRippleWidth = 2;
+const smallRippleSpeed = 20;
+const smallRippleMaxTime = 3;
 const smallRippleWidth = 2;
+const burstTime1 = 3;
+const burstTime2 = 3;
+const burstMaxTime = burstTime1 + burstTime2;
+const burstMinRadius = 100;
+const burstMaxRadius = 150;
+
+// Github Copilot writing poetry
+const poem = [
+	"I am a poem",
+	"I am a poem",
+	"I am a poem",
+];
 
 function Canvas({ awareness }) {
+	// TODO: combine bigRipples, smallRipples, mousePaths, and bursts into:
+	// canvasInfo = {
+	// 	 client1: {
+	//		 bigRipples: [],
+	//		 smallRipples: [],
+	//		 mousePaths: [],
+	//		 bursts: [],
+	//	 },
+	//	 client2: {
+	//	   ...
+	//	 }
+	// }
+	// (stored locally)
+
   let bigRipples = [];
   let smallRipples = [];
   let mousePaths = {};
+	let bursts = [];
+
   let holdState = 0;
   let holdTimer = null;
   const clientId = awareness.clientID;
@@ -35,12 +63,17 @@ function Canvas({ awareness }) {
       } else {
         clearInterval(holdTimer);
         holdState = 0;
-        // Scream
         const now = Date.now();
         awareness.setLocalStateField("canvasInfo", {
           bigRipple: {
             x: p5.mouseX,
             y: p5.mouseY,
+            timestamp: Date.now(), // only used to ensure uniqueness
+          },
+          burst: {
+            x: p5.mouseX,
+            y: p5.mouseY,
+						line: 2,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
         });
@@ -55,13 +88,13 @@ function Canvas({ awareness }) {
 
   awareness.on("change", ({ updated }) => {
     if (updated) {
+    	const now = Date.now();
       const states = awareness.getStates();
       updated.forEach((clientID) => {
         const { canvasInfo } = states.get(clientID);
         if (canvasInfo) {
-          const { smallRipple, bigRipple, mouse } = canvasInfo;
+          const { smallRipple, bigRipple, burst, mouse } = canvasInfo;
           if (smallRipple) {
-            const now = Date.now();
             smallRipples.push({
               x: smallRipple.x,
               y: smallRipple.y,
@@ -69,23 +102,40 @@ function Canvas({ awareness }) {
             });
           }
           if (bigRipple) {
-            const now = Date.now();
-
             bigRipples.push(
               { x: bigRipple.x, y: bigRipple.y, startTime: now },
               { x: bigRipple.x, y: bigRipple.y, startTime: now + 100 },
               { x: bigRipple.x, y: bigRipple.y, startTime: now + 200 }
             );
           }
+					if (burst) {
+						let letters = poem[burst.line].split("").map((letter, index) => {
+							const randomAngle = Math.random() * Math.PI * 2;
+							const radius = burstMinRadius + Math.random() * (burstMaxRadius - burstMinRadius);
+							return {
+								letter,
+								index,
+								midX: burst.x + Math.cos(randomAngle) * radius,
+								midY: burst.y + Math.sin(randomAngle) * radius,
+								endX: 100 + 10 * index,
+								endY: 100 + 20 * burst.line,
+							};
+						}).filter((letter) => {
+							return letter.letter !== " ";
+						});
+
+						bursts.push({
+							...burst,
+							letters,
+							startTime: now,
+						});
+					}
+
           if (mouse) {
             if (!mousePaths[clientID]) {
               mousePaths[clientID] = [];
             }
-            mousePaths[clientID].push({
-              x: mouse.x,
-              y: mouse.y,
-              timestamp: Date.now(),
-            });
+            mousePaths[clientID].push({ ...mouse, startTime: now });
 
             /*
 						if (mousePaths[clientID].length === 0) {
@@ -169,7 +219,7 @@ function Canvas({ awareness }) {
       }
     });
 
-    p5.fill(0, 0);
+    p5.fill(0, 0);	// fully transparent
     p5.strokeWeight(bigRippleWidth);
     let newBigRipples = [];
     bigRipples.forEach((ripple) => {
@@ -193,6 +243,20 @@ function Canvas({ awareness }) {
       }
     });
     smallRipples = newSmallRipples;
+
+    p5.fill(255);
+		p5.noStroke();
+		bursts = bursts.filter(({ startTime }) => {
+			return (now - startTime) / 1000 < burstMaxTime;
+		});
+    bursts.forEach((burst) => {
+      const time = (now - burst.startTime) / 1000;
+			if (time < burstTime1) {
+				burst.letters.forEach((letter) => {
+					drawLetter1(p5, letter, burst.x, burst.y, time);
+				});
+			}
+    });
   };
 
   const drawBigRipple = (p5, ripple, time) => {
@@ -234,6 +298,16 @@ function Canvas({ awareness }) {
 		}
 	}
 	*/
+	
+	const drawLetter1 = (p5, letter, startX, startY, time) => {
+		let t = time / burstTime1;
+		t = Math.sqrt(t);
+		const x = startX + (letter.midX - startX) * t;
+		const y = startY + (letter.midY - startY) * t;
+		console.log(x, y);
+		p5.text(letter.letter, x, y);
+	}
+
 
   return (
     <Sketch
