@@ -19,31 +19,27 @@ const burstMinRadius = 100;
 const burstMaxRadius = 150;
 
 // Github Copilot writing poetry
-const poem = [
-	"I am a poem",
-	"I am a poem",
-	"I am a poem",
-];
+const poem = ["I am a poem", "I am a poem", "I am a poem"];
 
 function Canvas({ awareness }) {
-	// TODO: combine bigRipples, smallRipples, mousePaths, and bursts into:
-	// canvasInfo = {
-	// 	 client1: {
-	//		 bigRipples: [],
-	//		 smallRipples: [],
-	//		 mousePaths: [],
-	//		 bursts: [],
-	//	 },
-	//	 client2: {
-	//	   ...
-	//	 }
-	// }
-	// (stored locally)
+  // TODO: combine bigRipples, smallRipples, mousePaths, and bursts into:
+  // canvasInfo = {
+  // 	 client1: {
+  //		 bigRipples: [],
+  //		 smallRipples: [],
+  //		 mousePaths: [],
+  //		 bursts: [],
+  //	 },
+  //	 client2: {
+  //	   ...
+  //	 }
+  // }
+  // (stored locally)
 
   let bigRipples = [];
   let smallRipples = [];
   let mousePaths = {};
-	let bursts = [];
+  let bursts = [];
 
   let cursors = {};
   let holdState = 0;
@@ -84,7 +80,7 @@ function Canvas({ awareness }) {
           burst: {
             x: p5.mouseX,
             y: p5.mouseY,
-						line: 2,
+            line: 2,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
         });
@@ -97,23 +93,9 @@ function Canvas({ awareness }) {
     holdState = 0;
   };
 
-  const mouseMoved = (p5) => {
-    if (stale > 7) {
-      awareness.setLocalStateField("canvasInfo", {
-        mouse: {
-          x: p5.mouseX,
-          y: p5.mouseY,
-          holdState: holdState,
-        },
-      });
-      stale = 0;
-    }
-    stale++;
-  };
-
   awareness.on("change", ({ updated }) => {
     if (updated) {
-    	const now = Date.now();
+      const now = Date.now();
       const states = awareness.getStates();
       updated.forEach((clientID) => {
         const { canvasInfo } = states.get(clientID);
@@ -134,28 +116,33 @@ function Canvas({ awareness }) {
               { x: bigRipple.x, y: bigRipple.y, startTime: now + 200 }
             );
           }
-					if (burst) {
-						let letters = poem[burst.line].split("").map((letter, index) => {
-							const randomAngle = Math.random() * Math.PI * 2;
-							const radius = burstMinRadius + Math.random() * (burstMaxRadius - burstMinRadius);
-							return {
-								letter,
-								index,
-								midX: burst.x + Math.cos(randomAngle) * radius,
-								midY: burst.y + Math.sin(randomAngle) * radius,
-								endX: 100 + 10 * index,
-								endY: 100 + 20 * burst.line,
-							};
-						}).filter((letter) => {
-							return letter.letter !== " ";
-						});
+          if (burst) {
+            let letters = poem[burst.line]
+              .split("")
+              .map((letter, index) => {
+                const randomAngle = Math.random() * Math.PI * 2;
+                const radius =
+                  burstMinRadius +
+                  Math.random() * (burstMaxRadius - burstMinRadius);
+                return {
+                  letter,
+                  index,
+                  midX: burst.x + Math.cos(randomAngle) * radius,
+                  midY: burst.y + Math.sin(randomAngle) * radius,
+                  endX: 100 + 10 * index,
+                  endY: 100 + 20 * burst.line,
+                };
+              })
+              .filter((letter) => {
+                return letter.letter !== " ";
+              });
 
-						bursts.push({
-							...burst,
-							letters,
-							startTime: now,
-						});
-					}
+            bursts.push({
+              ...burst,
+              letters,
+              startTime: now,
+            });
+          }
 
           if (mouse) {
             if (!cursors[clientID]) {
@@ -222,6 +209,19 @@ function Canvas({ awareness }) {
     const now = Date.now();
     p5.background(0);
 
+    // Update mouse position every frame
+    if (stale > 6) {
+      awareness.setLocalStateField("canvasInfo", {
+        mouse: {
+          x: p5.mouseX,
+          y: p5.mouseY,
+          holdState: holdState,
+        },
+      });
+      stale = 0;
+    }
+    stale++;
+
     p5.noStroke();
     for (const [key, value] of Object.entries(cursors)) {
       let color = p5.color(
@@ -234,7 +234,7 @@ function Canvas({ awareness }) {
       p5.ellipse(value.x, value.y, radius);
     }
 
-    p5.fill(0, 0);	// fully transparent
+    p5.fill(0, 0); // fully transparent
     p5.strokeWeight(bigRippleWidth);
     let newBigRipples = [];
     bigRipples.forEach((ripple) => {
@@ -260,17 +260,17 @@ function Canvas({ awareness }) {
     smallRipples = newSmallRipples;
 
     p5.fill(255);
-		p5.noStroke();
-		bursts = bursts.filter(({ startTime }) => {
-			return (now - startTime) / 1000 < burstMaxTime;
-		});
+    p5.noStroke();
+    bursts = bursts.filter(({ startTime }) => {
+      return (now - startTime) / 1000 < burstMaxTime;
+    });
     bursts.forEach((burst) => {
       const time = (now - burst.startTime) / 1000;
-			if (time < burstTime1) {
-				burst.letters.forEach((letter) => {
-					drawLetter1(p5, letter, burst.x, burst.y, time);
-				});
-			}
+      if (time < burstTime1) {
+        burst.letters.forEach((letter) => {
+          drawLetter1(p5, letter, burst.x, burst.y, time);
+        });
+      }
     });
   };
 
@@ -313,16 +313,15 @@ function Canvas({ awareness }) {
 		}
 	}
 	*/
-	
-	const drawLetter1 = (p5, letter, startX, startY, time) => {
-		let t = time / burstTime1;
-		t = Math.sqrt(t);
-		const x = startX + (letter.midX - startX) * t;
-		const y = startY + (letter.midY - startY) * t;
-		console.log(x, y);
-		p5.text(letter.letter, x, y);
-	}
 
+  const drawLetter1 = (p5, letter, startX, startY, time) => {
+    let t = time / burstTime1;
+    t = Math.sqrt(t);
+    const x = startX + (letter.midX - startX) * t;
+    const y = startY + (letter.midY - startY) * t;
+    console.log(x, y);
+    p5.text(letter.letter, x, y);
+  };
 
   return (
     <Sketch
@@ -330,7 +329,6 @@ function Canvas({ awareness }) {
       draw={draw}
       mousePressed={mousePressed}
       mouseReleased={mouseReleased}
-      mouseMoved={mouseMoved}
       className="Canvas"
     />
   );
