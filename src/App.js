@@ -91,7 +91,7 @@ function App() {
       audio.pause();
     };
 
-    // isPlaying ? startPlaying() : stopPlaying();
+    isPlaying ? startPlaying() : stopPlaying();
   }, [isPlaying, audio]);
 
   return (
@@ -105,8 +105,8 @@ function App() {
             setTimeout(() => {
               setIsPlaying(!isPlaying);
             }, 2000);
-            audio.volume = 0.4;
-            audio.play();
+            // audio.volume = 0.4;
+            // audio.play();
           }}
           visible={!fade}
         >
