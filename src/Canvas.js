@@ -5,25 +5,25 @@ import "./App.css";
 // constant parameters to control animation
 const cursorRadius = 6;
 const cursorAlpha = 100;
-const bigRippleSpeed = 60;
+const bigRippleSpeed = 50;
 const smallRippleSpeed = 20;
-const bigRippleMaxTime = 3;
-const smallRippleMaxTime = 1;
+const bigRippleMaxTime = 2;
+const smallRippleMaxTime = 2;
 const bigRippleWidth = 2;
 const smallRippleWidth = 2;
 
 function Canvas({ awareness }) {
   let bigRipples = [];
   let smallRipples = [];
-	
-	let lastSmallRipple = null;
+
+  let lastSmallRipple = null;
 
   const mousePressed = (p5) => {
     awareness.setLocalStateField("canvasInfo", {
       click: {
         x: p5.mouseX,
         y: p5.mouseY,
-				timestamp: Date.now(),	// only used to ensure uniqueness
+        timestamp: Date.now(), // only used to ensure uniqueness
       },
     });
   };
@@ -32,16 +32,15 @@ function Canvas({ awareness }) {
     if (updated) {
       const states = awareness.getStates();
       updated.forEach((clientID) => {
-        const state = states.get(clientID);
-        const { canvasInfo } = state;
+        const { canvasInfo } = states.get(clientID);
         if (canvasInfo) {
-					const { click, mouse } = canvasInfo;
+          const { click, mouse } = canvasInfo;
           if (click) {
             const now = Date.now();
             bigRipples.push(
               { x: click.x, y: click.y, startTime: now },
               { x: click.x, y: click.y, startTime: now + 100 },
-              { x: click.x, y: click.y, startTime: now + 200 }
+              { x: click.x, y: click.y, startTime: now + 200 },
             );
           }
 					/*
@@ -89,13 +88,10 @@ function Canvas({ awareness }) {
 			}
 		});
 
-		//newSmallRipple(p5);
-
     p5.fill(0, 0);
     p5.strokeWeight(bigRippleWidth);
 		let newBigRipples = [];
-    for (let i = bigRipples.length - 1; i >= 0; i--) {
-      let ripple = bigRipples[i];
+		bigRipples.forEach((ripple) => {
       let time = (now - ripple.startTime) / 1000;
 			if (time < bigRippleMaxTime) {
       	if (time > 0) {
@@ -103,21 +99,19 @@ function Canvas({ awareness }) {
 				}
 				newBigRipples.push(ripple);
       }
-    }
+    });
 		bigRipples = newBigRipples;
 
-		/*
     p5.strokeWeight(smallRippleWidth);
-    for (let i = smallRipples.length - 1; i >= 0; i--) {
-      let time = (now - smallRipples[i].startTime) / 1000;
-      if (time > 0) {
-        let keep = drawSmallRipple(p5, smallRipples[i], time);
-        if (!keep) {
-          smallRipples.splice(i, 1);
-        }
+		let newSmallRipples = [];
+		smallRipples.forEach((ripple) => {
+      let time = (now - ripple.startTime) / 1000;
+			if (time < smallRippleMaxTime) {
+      	drawSmallRipple(p5, ripple, time);
+				newSmallRipples.push(ripple);
       }
-    }
-		*/
+		});
+		smallRipples = newSmallRipples;
   };
 
   const drawBigRipple = (p5, ripple, time) => {
@@ -136,6 +130,7 @@ function Canvas({ awareness }) {
 		p5.ellipse(ripple.x, ripple.y, radius);
   };
 
+	/*
 	const newSmallRipple = (p5) => {
 		if (lastSmallRipple) {
 			const x1 = lastSmallRipple.x;
@@ -157,6 +152,7 @@ function Canvas({ awareness }) {
 			awareness.setLocalStateField("canvasInfo", { mouse: lastSmallRipple });
 		}
 	}
+	*/
 
   return (
     <Sketch

@@ -4,6 +4,7 @@ import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import "./App.css";
 import Canvas from "./Canvas";
+import styled from "styled-components";
 
 const deepSynth = "/deepAmbience.wav";
 const notes = [
@@ -18,7 +19,9 @@ const notes = [
 
 const doc = new Y.Doc();
 const wsProvider = new WebsocketProvider(
-  "ws://44.207.249.52:1234",
+  //"ws://44.207.249.52:1234",
+	//"ws://localhost:1234",
+	"wss://vibes.jonathanxu.com:1234",
   "my-roomname",
   doc
 );
@@ -53,6 +56,7 @@ function playNote() {
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio] = useState(new Audio(deepSynth));
+  const [fade, setFade] = useState(false);
 
   useEffect(() => {
     audio.addEventListener("timeupdate", function () {
@@ -66,16 +70,50 @@ function App() {
   }, []);
 
   useEffect(() => {
-    isPlaying ? audio.play() : audio.pause();
+    const startPlaying = () => {
+      const fadeAudio = setInterval(() => {
+        if (audio.volume !== 4) {
+          audio.volume += 0.02;
+        }
+
+        if (audio.volume > 0.38) {
+          clearInterval(fadeAudio);
+        }
+      }, 200);
+      audio.play();
+    };
+    const stopPlaying = () => {
+      const fadeAudio = setInterval(() => {
+        if (audio.volume !== 0) {
+          audio.volume -= 0.02;
+        }
+
+        if (audio.volume < 0.02) {
+          clearInterval(fadeAudio);
+        }
+      }, 200);
+      audio.pause();
+    };
+
+    isPlaying ? startPlaying() : stopPlaying();
   }, [isPlaying, audio]);
 
   return (
-    <div className="App">
-      <Canvas awareness={awareness} />
-      {!isPlaying && (
-        <button onClick={() => setIsPlaying(!isPlaying)} className="Start">
-          to float in the depths
-        </button>
+    <MainDiv>
+      {isPlaying ? (
+        <Canvas awareness={awareness} />
+      ) : (
+        <StartButton
+          onClick={() => {
+            setFade(true);
+            setTimeout(() => {
+              setIsPlaying(!isPlaying);
+            }, 2000);
+          }}
+          visible={!fade}
+        >
+          wrap me in the deep
+        </StartButton>
       )}
 
       {/* Background ambience */}
@@ -100,8 +138,37 @@ function App() {
           ></Instrument>
         </Track> */}
       </Song>
-    </div>
+    </MainDiv>
   );
 }
 
 export default App;
+
+const MainDiv = styled.div`
+  background-color: black;
+  height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+`;
+
+const StartButton = styled.button`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  font-size: 2rem;
+  color: #fff;
+  background-color: black;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  z-index: 1;
+  font-family: "Crimson Text", serif;
+  opacity: ${(props) => (props.visible ? "1" : "0")};
+  transition: opacity 2s ease-in-out;
+`;
