@@ -20,6 +20,7 @@ function Canvas({ awareness }) {
   let holdState = 0;
   let holdTimer = null;
   const clientId = awareness.clientID;
+  let stale = 0;
 
   const mousePressed = (p5) => {
     awareness.setLocalStateField("canvasInfo", {
@@ -63,13 +64,17 @@ function Canvas({ awareness }) {
   };
 
   const mouseMoved = (p5) => {
-    awareness.setLocalStateField("canvasInfo", {
-      mouse: {
-        x: p5.mouseX,
-        y: p5.mouseY,
-        holdState: holdState,
-      },
-    });
+    if (stale > 7) {
+      awareness.setLocalStateField("canvasInfo", {
+        mouse: {
+          x: p5.mouseX,
+          y: p5.mouseY,
+          holdState: holdState,
+        },
+      });
+      stale = 0;
+    }
+    stale++;
   };
 
   awareness.on("change", ({ updated }) => {
