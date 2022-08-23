@@ -74,7 +74,6 @@ function App() {
           onClick={() => {
             setFade(true);
             setTimeout(() => {
-              audio.volume = 0;
               const fadeAudio = setInterval(() => {
                 if (audio.volume !== 4) {
                   audio.volume += 0.02;
@@ -84,10 +83,10 @@ function App() {
                   clearInterval(fadeAudio);
                 }
               }, 200);
-              audio.play();
               setIsPlaying(true);
             }, 2000);
-            // audio.play();
+            audio.volume = 0;
+            audio.play();
           }}
           visible={!fade}
         >
