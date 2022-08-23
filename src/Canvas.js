@@ -7,16 +7,14 @@ const cursorRadius = 6;
 const cursorAlpha = 100;
 const bigRippleSpeed = 50;
 const smallRippleSpeed = 20;
-const bigRippleMaxTime = 2;
-const smallRippleMaxTime = 2;
+const bigRippleMaxTime = 3;
+const smallRippleMaxTime = 3;
 const bigRippleWidth = 2;
 const smallRippleWidth = 2;
 
 function Canvas({ awareness }) {
   let bigRipples = [];
-  let smallRipples = [];
-
-  let lastSmallRipple = null;
+	let mousePaths = {};
 
   const mousePressed = (p5) => {
     awareness.setLocalStateField("canvasInfo", {
@@ -43,14 +41,49 @@ function Canvas({ awareness }) {
               { x: click.x, y: click.y, startTime: now + 200 },
             );
           }
-					/*
 					if (mouse) {
-						const now = Date.now();
-						smallRipples.push(
-							{ x: mouse.x, y: mouse.y, startTime: now },
-						);
+						if (!mousePaths[clientID]) {
+							mousePaths[clientID] = [];
+						}
+						mousePaths[clientID].push({ x: mouse.x, y: mouse.y, timestamp: Date.now() });
+
+						/*
+						if (mousePaths[clientID].length === 0) {
+							mousePaths[clientID] = [{
+								x: mouse.x,
+								y: mouse.y,
+								startTime: Date.now(),
+							}];
+						} else {
+							const path = mousePaths[clientID];
+							const x = p5.mouseX;
+							const y = p5.mouseY;
+							const t = Date.now();
+							while (true) {
+								const lastRipple = path[path.length - 1];
+								const x0 = lastRipple.x;
+								const y0 = lastRipple.y;
+								const t0 = lastRipple.startTime;
+								const dx = x - x0;
+								const dy = y - y0;
+								const dt = t - t0;
+								const d = Math.sqrt(dx * dx + dy * dy);
+								if (dt / 3000  + d / maxPathJumpDistance > 1) {
+									if (d > maxPathJumpDistance) {
+										path.push({
+											x: x0 + dx / d * maxPathJumpDistance,
+											y: y0 + dy / d * maxPathJumpDistance,
+											startTime: t + maxPathJumpDistance / maxPathSpeed,
+										});
+									}
+									lastSmallRipple = { x: x2, y: y2, startTime: t2 };
+								} else {
+									break;
+								}
+							}
+						}
+						*/
 					}
-					*/
         }
       });
     }
@@ -102,6 +135,7 @@ function Canvas({ awareness }) {
     });
 		bigRipples = newBigRipples;
 
+		/*
     p5.strokeWeight(smallRippleWidth);
 		let newSmallRipples = [];
 		smallRipples.forEach((ripple) => {
@@ -112,6 +146,7 @@ function Canvas({ awareness }) {
       }
 		});
 		smallRipples = newSmallRipples;
+		*/
   };
 
   const drawBigRipple = (p5, ripple, time) => {
