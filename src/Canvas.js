@@ -1,3 +1,4 @@
+import { PerfectCursor } from "perfect-cursors";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
@@ -15,7 +16,7 @@ const smallRippleWidth = 2;
 function Canvas({ awareness }) {
   let bigRipples = [];
   let smallRipples = [];
-  let mousePaths = {};
+  let cursors = {};
   let holdState = 0;
   let holdTimer = null;
   const clientId = awareness.clientID;
@@ -32,6 +33,14 @@ function Canvas({ awareness }) {
     holdTimer = setInterval(() => {
       if (holdState < 100) {
         holdState += 10;
+        // TODO: redundant fix
+        awareness.setLocalStateField("canvasInfo", {
+          mouse: {
+            x: p5.mouseX,
+            y: p5.mouseY,
+            holdState: holdState,
+          },
+        });
       } else {
         clearInterval(holdTimer);
         holdState = 0;
@@ -53,6 +62,16 @@ function Canvas({ awareness }) {
     holdState = 0;
   };
 
+  const mouseMoved = (p5) => {
+    awareness.setLocalStateField("canvasInfo", {
+      mouse: {
+        x: p5.mouseX,
+        y: p5.mouseY,
+        holdState: holdState,
+      },
+    });
+  };
+
   awareness.on("change", ({ updated }) => {
     if (updated) {
       const states = awareness.getStates();
@@ -60,6 +79,7 @@ function Canvas({ awareness }) {
         const { canvasInfo } = states.get(clientID);
         if (canvasInfo) {
           const { smallRipple, bigRipple, mouse } = canvasInfo;
+          // Small ripple location
           if (smallRipple) {
             const now = Date.now();
             smallRipples.push({
@@ -68,6 +88,7 @@ function Canvas({ awareness }) {
               startTime: now,
             });
           }
+          // Big ripple location
           if (bigRipple) {
             const now = Date.now();
 
@@ -77,15 +98,18 @@ function Canvas({ awareness }) {
               { x: bigRipple.x, y: bigRipple.y, startTime: now + 200 }
             );
           }
+          // Update mouse location and state
           if (mouse) {
-            if (!mousePaths[clientID]) {
-              mousePaths[clientID] = [];
+            if (!cursors[clientID]) {
+              cursors[clientID] = {};
+              function updateMyCursor(point) {
+                cursors[clientID].x = point[0];
+                cursors[clientID].y = point[1];
+              }
+              cursors[clientID].pc = new PerfectCursor(updateMyCursor);
             }
-            mousePaths[clientID].push({
-              x: mouse.x,
-              y: mouse.y,
-              timestamp: Date.now(),
-            });
+            cursors[clientID].pc.addPoint([mouse.x, mouse.y]);
+            cursors[clientID].holdState = mouse.holdState;
 
             /*
 						if (mousePaths[clientID].length === 0) {
@@ -140,34 +164,17 @@ function Canvas({ awareness }) {
     const now = Date.now();
     p5.background(0);
 
-    // sending mouse position on every draw seems too frequent
-    // probably better to use less events + interpolation
-    awareness.setLocalStateField("canvasInfo", {
-      mouse: {
-        x: p5.mouseX,
-        y: p5.mouseY,
-        timestamp: now,
-        holdState: holdState,
-      },
-    });
-
     p5.noStroke();
-    awareness.getStates().forEach((value, key) => {
-      const { canvasInfo } = value;
-      if (canvasInfo) {
-        let { mouse } = canvasInfo;
-        if (mouse) {
-          let color = p5.color(
-            255,
-            cursorAlpha + ((255 - cursorAlpha) * mouse.holdState) / 100
-          );
-          let radius = cursorRadius + (cursorRadius * mouse.holdState) / 100;
+    for (const [key, value] of Object.entries(cursors)) {
+      let color = p5.color(
+        255,
+        cursorAlpha + ((255 - cursorAlpha) * value.holdState) / 100
+      );
+      let radius = cursorRadius + (cursorRadius * value.holdState) / 100;
 
-          p5.fill(color);
-          p5.ellipse(mouse.x, mouse.y, radius);
-        }
-      }
-    });
+      p5.fill(color);
+      p5.ellipse(value.x, value.y, radius);
+    }
 
     p5.fill(0, 0);
     p5.strokeWeight(bigRippleWidth);
@@ -241,6 +248,7 @@ function Canvas({ awareness }) {
       draw={draw}
       mousePressed={mousePressed}
       mouseReleased={mouseReleased}
+      mouseMoved={mouseMoved}
       className="Canvas"
     />
   );

@@ -37,7 +37,7 @@ awareness.on("change", ({ updated }) => {
       // key is the clientID
       const state = states.get(key); // state is updated awareness state
       const { canvasInfo } = state;
-      if (canvasInfo && canvasInfo.click) {
+      if (canvasInfo && canvasInfo.bigRipple) {
         playNote();
       }
     });
