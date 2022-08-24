@@ -126,6 +126,7 @@ const MainDiv = styled.div`
   background-color: black;
   height: 100vh;
   width: 100vw;
+  box-sizing: border-box;
   overflow-x: hidden;
   position: relative;
   -webkit-tap-highlight-color: transparent;
