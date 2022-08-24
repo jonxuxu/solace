@@ -126,6 +126,7 @@ const MainDiv = styled.div`
   background-color: black;
   width: 100vw;
   height: 100vh;
+  min-height: fill-available;
   min-height: -webkit-fill-available;
   position: relative;
   -webkit-tap-highlight-color: transparent;
