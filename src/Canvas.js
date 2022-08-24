@@ -104,7 +104,7 @@ function Canvas({ awareness }) {
     holdState = 0;
   };
 
-  awareness.on("change", ({ updated }) => {
+  awareness.on("change", ({ updated, removed }) => {
     if (updated) {
       const now = Date.now();
       const states = awareness.getStates();
@@ -186,6 +186,12 @@ function Canvas({ awareness }) {
             cursors[clientID].holdState = mouse.holdState;
           }
         }
+      });
+    }
+    // Remove cursors that are no longer in the awareness
+    if (removed) {
+      removed.forEach((clientID) => {
+        delete cursors[clientID];
       });
     }
   });
