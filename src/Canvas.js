@@ -21,7 +21,7 @@ const poem = [
 	"This is the third line of the poem",
 ];
 
-function burstScale1(scale, t) {
+function burstScale1(scale, t, endTime) {
 	t = Math.min(t / (burstTime1 + burstTime2), 1);
 	return Math.sqrt(1-(1-t)*(1-t)) * scale;
 }
