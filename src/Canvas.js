@@ -1,4 +1,5 @@
 import { PerfectCursor } from "perfect-cursors";
+import { Spline } from "./Spline";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
@@ -38,13 +39,13 @@ function Canvas({ awareness }) {
 
   let bigRipples = [];
   let smallRipples = [];
-  let mousePaths = {};
   let bursts = [];
 
-  let cursors = {};
   let holdState = 0;
   let holdTimer = null;
-  const clientId = awareness.clientID;
+  const myClientId = awareness.clientID;
+  let cursors = { [myClientId]: { x: 0, y: 0 } };
+
   let stale = 0;
 
   const mousePressed = (p5) => {
@@ -143,55 +144,36 @@ function Canvas({ awareness }) {
               startTime: now,
             });
           }
-
           if (mouse) {
             if (!cursors[clientID]) {
               cursors[clientID] = {};
-              function updateMyCursor(point) {
-                cursors[clientID].x = point[0];
-                cursors[clientID].y = point[1];
+              if (clientID !== myClientId) {
+                // function updateMyCursor(point) {
+                //   cursors[clientID].x = point[0];
+                //   cursors[clientID].y = point[1];
+                // }
+                // cursors[clientID].pc = new PerfectCursor(updateMyCursor);
+                cursors[clientID].sp = new Spline();
               }
-              cursors[clientID].pc = new PerfectCursor(updateMyCursor);
             }
-            cursors[clientID].pc.addPoint([mouse.x, mouse.y]);
+            if (clientID !== myClientId) {
+              // cursors[clientID].pc.addPoint([mouse.x, mouse.y]);
+              cursors[clientID].sp.addPoint([mouse.x, mouse.y]);
+              // console.log(JSON.stringify(cursors[clientID].sp.points));
+              if (!cursors[clientID].animating) {
+                cursors[clientID].animating = true;
+                cursors[clientID].splineStart = performance.now();
+                cursors[clientID].currFrame = 0;
+                cursors[clientID].idleTimer = setTimeout(() => {
+                  cursors[clientID].animating = false;
+                  cursors[clientID].sp.clear();
+                  cursors[clientID].currFrame = 0;
+                }, 300);
+              } else {
+                clearTimeout(cursors[clientID].idleTimer);
+              }
+            }
             cursors[clientID].holdState = mouse.holdState;
-
-            /*
-						if (mousePaths[clientID].length === 0) {
-							mousePaths[clientID] = [{
-								x: mouse.x,
-								y: mouse.y,
-								startTime: Date.now(),
-							}];
-						} else {
-							const path = mousePaths[clientID];
-							const x = p5.mouseX;
-							const y = p5.mouseY;
-							const t = Date.now();
-							while (true) {
-								const lastRipple = path[path.length - 1];
-								const x0 = lastRipple.x;
-								const y0 = lastRipple.y;
-								const t0 = lastRipple.startTime;
-								const dx = x - x0;
-								const dy = y - y0;
-								const dt = t - t0;
-								const d = Math.sqrt(dx * dx + dy * dy);
-								if (dt / 3000  + d / maxPathJumpDistance > 1) {
-									if (d > maxPathJumpDistance) {
-										path.push({
-											x: x0 + dx / d * maxPathJumpDistance,
-											y: y0 + dy / d * maxPathJumpDistance,
-											startTime: t + maxPathJumpDistance / maxPathSpeed,
-										});
-									}
-									lastSmallRipple = { x: x2, y: y2, startTime: t2 };
-								} else {
-									break;
-								}
-							}
-						}
-						*/
           }
         }
       });
@@ -206,11 +188,10 @@ function Canvas({ awareness }) {
   };
 
   const draw = (p5) => {
-    const now = Date.now();
     p5.background(0);
 
     // Update mouse position every frame
-    if (stale > 6) {
+    if (stale > 7) {
       awareness.setLocalStateField("canvasInfo", {
         mouse: {
           x: p5.mouseX,
@@ -223,16 +204,33 @@ function Canvas({ awareness }) {
     stale++;
 
     p5.noStroke();
+    cursors[myClientId].x = p5.mouseX;
+    cursors[myClientId].y = p5.mouseY;
     for (const [key, value] of Object.entries(cursors)) {
+      // Calculate color and size from charge state
       let color = p5.color(
         255,
         cursorAlpha + ((255 - cursorAlpha) * value.holdState) / 100
       );
       let radius = cursorRadius + (cursorRadius * value.holdState) / 100;
-
       p5.fill(color);
+
+      // Calculate x,y from spline
+      if (key != myClientId && value.animating && value.sp.points.length > 1) {
+        const splineNow = performance.now();
+        const point = value.sp.getSplinePoint(
+          value.currFrame + (splineNow - value.splineStart) / 30
+        );
+        cursors[key].x = point[0];
+        cursors[key].y = point[1];
+        if ((splineNow - value.splineStart) / 30 > 1) {
+          cursors[key].currFrame++;
+        }
+      }
       p5.ellipse(value.x, value.y, radius);
     }
+
+    const now = Date.now();
 
     p5.fill(0, 0); // fully transparent
     p5.strokeWeight(bigRippleWidth);
@@ -319,7 +317,6 @@ function Canvas({ awareness }) {
     t = Math.sqrt(t);
     const x = startX + (letter.midX - startX) * t;
     const y = startY + (letter.midY - startY) * t;
-    console.log(x, y);
     p5.text(letter.letter, x, y);
   };
 
