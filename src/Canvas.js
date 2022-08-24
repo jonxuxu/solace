@@ -58,7 +58,7 @@ function Canvas({ awareness }) {
     debounce = true;
     debounceTimer = setTimeout(() => {
       debounce = false;
-    }, 100);
+    }, 300);
     awareness.setLocalStateField("canvasInfo", {
       smallRipple: {
         x: p5.mouseX,
