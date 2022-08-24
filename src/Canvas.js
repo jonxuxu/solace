@@ -36,6 +36,7 @@ function Canvas({ awareness }) {
   //	 }
   // }
   // (stored locally)
+  let canvasScale = 1;
 
   let bigRipples = [];
   let smallRipples = [];
@@ -47,22 +48,20 @@ function Canvas({ awareness }) {
   let cursors = { [myClientId]: { x: 0, y: 0 } };
 
   let stale = 0;
-
   let debounce = false;
-  let debounceTimer = null;
 
   const mousePressed = (p5) => {
     if (debounce) {
       return;
     }
     debounce = true;
-    debounceTimer = setTimeout(() => {
+    setTimeout(() => {
       debounce = false;
     }, 300);
     awareness.setLocalStateField("canvasInfo", {
       smallRipple: {
-        x: p5.mouseX,
-        y: p5.mouseY,
+        x: p5.mouseX * canvasScale,
+        y: p5.mouseY * canvasScale,
         timestamp: Date.now(), // only used to ensure uniqueness
       },
     });
@@ -73,8 +72,8 @@ function Canvas({ awareness }) {
         // TODO: redundant fix
         awareness.setLocalStateField("canvasInfo", {
           mouse: {
-            x: p5.mouseX,
-            y: p5.mouseY,
+            x: p5.mouseX * canvasScale,
+            y: p5.mouseY * canvasScale,
             holdState: holdState,
           },
         });
@@ -84,13 +83,13 @@ function Canvas({ awareness }) {
         const now = Date.now();
         awareness.setLocalStateField("canvasInfo", {
           bigRipple: {
-            x: p5.mouseX,
-            y: p5.mouseY,
+            x: p5.mouseX * canvasScale,
+            y: p5.mouseY * canvasScale,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
           burst: {
-            x: p5.mouseX,
-            y: p5.mouseY,
+            x: p5.mouseX * canvasScale,
+            y: p5.mouseY * canvasScale,
             line: 2,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
@@ -201,17 +200,26 @@ function Canvas({ awareness }) {
     let height = canvasParentRef.offsetHeight;
     let cnv = p5.createCanvas(width, height).parent(canvasParentRef);
     p5.ellipseMode(p5.RADIUS);
+    // Scale p5 canvas based on 1920x1080
+    if (height / width > 1080 / 1920) {
+      canvasScale = 1080 / height;
+    } else {
+      canvasScale = 1920 / width;
+    }
   };
 
   const draw = (p5) => {
     p5.background(0);
 
+    p5.scale(1 / canvasScale);
+    // p5.translate((p5.width - 1920) / 2, (p5.height - 1080) / 2);
+
     // Update mouse position every frame
     if (stale > 7) {
       awareness.setLocalStateField("canvasInfo", {
         mouse: {
-          x: p5.mouseX,
-          y: p5.mouseY,
+          x: p5.mouseX * canvasScale,
+          y: p5.mouseY * canvasScale,
           holdState: holdState,
         },
       });
@@ -220,8 +228,8 @@ function Canvas({ awareness }) {
     stale++;
 
     p5.noStroke();
-    cursors[myClientId].x = p5.mouseX;
-    cursors[myClientId].y = p5.mouseY;
+    cursors[myClientId].x = p5.mouseX * canvasScale;
+    cursors[myClientId].y = p5.mouseY * canvasScale;
     for (const [key, value] of Object.entries(cursors)) {
       // Calculate color and size from charge state
       let color = p5.color(
