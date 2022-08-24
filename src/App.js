@@ -128,6 +128,13 @@ const MainDiv = styled.div`
   width: 100vw;
   overflow-x: hidden;
   position: relative;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 `;
 
 const StartButton = styled.button`
