@@ -125,10 +125,7 @@ export default App;
 const MainDiv = styled.div`
   background-color: black;
   width: 100vw;
-  height: 100vh;
-  min-height: fill-available;
-  min-height: -webkit-fill-available;
-  position: relative;
+  height: 100%;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;

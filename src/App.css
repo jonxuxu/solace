@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text&display=swap');
 
-html {
-  height: fill-available;
-  height: -webkit-fill-available;
+html, body {
+  height: 100%;
+  background-color: black;
 }
 
 .Canvas {
