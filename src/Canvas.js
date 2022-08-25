@@ -387,7 +387,7 @@ function Canvas({ awareness }) {
       // Calculate x,y from spline. Adapted animateNext to be called on each render frame instead on every cursor update
 
       if (key != myClientId) {
-        updateSpline(key);
+        drawSpline(key);
       } else {
         cursors[key].x = p5.mouseX * canvasScale + xTranslate;
         cursors[key].y = p5.mouseY * canvasScale + yTranslate;
@@ -431,7 +431,8 @@ function Canvas({ awareness }) {
     });
   }
 
-  function updateSpline(key) {
+  function drawSpline(key) {
+    console.log("updateSpline");
     if (cursors[key].state == "animating") {
       const t =
         (performance.now() - cursors[key].animationStart) /
