@@ -94,7 +94,7 @@ function App() {
           }}
           visible={!fade}
         >
-          wrap me in the deep
+					Solace
         </StartButton>
       )}
 

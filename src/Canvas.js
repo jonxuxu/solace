@@ -4,7 +4,7 @@ import { Vec } from "@tldraw/vec";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
-import poems from "./poems.json";
+import poems from "./poems-demo.json";
 
 // constant parameters to control animation
 const cursorRadius = 9;
