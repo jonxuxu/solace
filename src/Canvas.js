@@ -3,39 +3,19 @@ import { Spline } from "./Spline";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
-//import poems from './poems.json';
+import poems from "./poems.json";
 
 // constant parameters to control animation
-const cursorRadius = 6;
+const cursorRadius = 9;
 const cursorAlpha = 100;
 const bigRippleSpeed = 50;
 const bigRippleMaxTime = 3;
-const bigRippleWidth = 2;
+const bigRippleWidth = 4;
 const smallRippleSpeed = 20;
 const smallRippleMaxTime = 3;
-const smallRippleWidth = 2;
+const smallRippleWidth = 2.5;
 const burstTime1 = 1;
 const burstTime2 = 3;
-
-const poems = [
-    {
-        "title": "Here Together",
-        "author": "W.S. Merwin",
-        "verses":[
-						"hi",
-            "These days I can see us clinging to each other",
-            "as we are swept along by the current",
-            "I am clinging to you to keep you from",
-            "being swept away and you are clinging to me",
-            "we see the shores blurring past as we hold",
-            "each other in the rushing current",
-            "the daylight rushes unheard far above us",
-            "how long will we be swept along in the daylight",
-            "how long we cling together in the night",
-            "and where will carry us together"
-        ]
-    },
-];
 
 function getOffset(el) {
 	var body, _x, _y;
@@ -96,8 +76,10 @@ function Canvas({ awareness }) {
   let smallRipples = [];
   let bursts = [];
 
+  // Charge animation
   let holdState = 0;
   let holdTimer = null;
+
   const myClientId = awareness.clientID;
   let cursors = { [myClientId]: { x: 0, y: 0 } };
 
