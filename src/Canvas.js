@@ -163,8 +163,7 @@ function Canvas({ awareness }) {
 		const posX = burst.x + a1 * v1X + a2 * v2X;
 		const posY = burst.y + a1 * v1Y + a2 * v2Y;
 		p5.push();
-		//p5.scale(canvasScale);
-		//p5.translate(xTranslate, yTranslate);
+		p5.textSize(32 * canvasScale);
 		p5.text(letter, posX, posY);
 		p5.pop();
 	}
@@ -200,7 +199,6 @@ function Canvas({ awareness }) {
         .map((letter, index) => {
 					const letterDiv = lineDiv.children[index];
 					const { top, left } = getOffset(letterDiv);
-					console.log(top, left);
           const randomAngle = Math.random() * Math.PI * 2;
           const scale = 150 + Math.random() * 50;
           const v1X = Math.cos(randomAngle);
@@ -209,8 +207,8 @@ function Canvas({ awareness }) {
           const s1 = burstScale1(scale, endTime);
           const midPosX = burst.x + v1X * s1;
           const midPosY = burst.y + v1Y * s1;
-          const endPosX = left;
-          const endPosY = top;
+          const endPosX = left * canvasScale + xTranslate;
+          const endPosY = top * canvasScale + yTranslate;
           const v2X = endPosX - midPosX;
           const v2Y = endPosY - midPosY;
 
@@ -280,6 +278,9 @@ function Canvas({ awareness }) {
     let height = canvasParentRef.offsetHeight;
     p5.createCanvas(width, height).parent(canvasParentRef);
     p5.ellipseMode(p5.RADIUS);
+		p5.textFont("Crimson Text");
+		p5.textAlign(p5.LEFT, p5.TOP);
+
     awareness.on("change", ({ updated }) => {
       if (updated) {
         const states = awareness.getStates();
