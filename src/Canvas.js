@@ -22,7 +22,6 @@ function getOffset(el) {
 	body = document.getElementsByTagName("body")[0];
 	_x = 0;
 	_y = 0;
-	console.log(el, el.offsetLeft, el.offsetTop);
 	while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
 		_x += el.offsetLeft - el.scrollLeft;
 		_y += el.offsetTop - el.scrollTop;
@@ -40,7 +39,6 @@ function setPoem(idx) {
 		centered.removeChild(centered.firstChild);
 	}
 	const verses = poems[idx].verses;
-	console.log(verses.length);
 	for (let i = 0; i < verses.length; i++) {
 		const verse = verses[i];
 		const line = document.createElement("div");
@@ -56,7 +54,6 @@ function setPoem(idx) {
 			line.appendChild(letter);
 		}
 		centered.appendChild(line);
-		console.log(line);
 	}
 }
 
@@ -90,6 +87,29 @@ function Canvas({ awareness }) {
   let yTranslate = 0;
 
 	let currentPoem = -1;
+	let currentLine = -1;
+	let canAdvance = true;
+	let advanceTimer = null;
+
+	function advanceLine() {
+		if (currentPoem === -1) {
+			currentPoem = 0;
+			currentLine = 0;
+			setPoem(currentPoem);
+		} else if (currentLine < poems[currentPoem].verses.length - 1) {
+			currentLine++;
+		} else {
+			currentLine = 0;
+			currentPoem = (currentPoem + 1) % poems.length;
+			// TODO: current poem should fade away
+			setPoem(currentPoem);
+		}
+		// must wait a few seconds before getting the next line
+		canAdvance = false;
+		advanceTimer = setInterval(() => {
+			canAdvance = true;
+		}, 5000);
+	}
 
   function mousePressed(p5) {
     if (debounce) {
@@ -119,6 +139,9 @@ function Canvas({ awareness }) {
           },
         });
       } else {
+				if (canAdvance) {
+					advanceLine();
+				}
         clearInterval(holdTimer);
         holdState = 0;
         awareness.setLocalStateField("canvasInfo", {
@@ -130,8 +153,8 @@ function Canvas({ awareness }) {
           burst: {
             x: p5.mouseX * canvasScale + xTranslate,
             y: p5.mouseY * canvasScale + yTranslate,
-						poem: 0,
-            line: 0,
+						poem: currentPoem,
+            line: currentLine,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
         });
@@ -187,13 +210,15 @@ function Canvas({ awareness }) {
       );
     }
     if (burst) {
-			if (currentPoem != burst.poem) {
-				currentPoem = burst.poem;
-				setPoem(currentPoem);
+			if (currentPoem !== burst.poem || currentLine !== burst.line) {
+				clearInterval(advanceTimer);
 			}
-			console.log(document.getElementById("poem-centered").children);
+			if (currentPoem !== burst.poem) {
+				setPoem(burst.poem);
+			}
+			currentPoem = burst.poem;
+			currentLine = burst.line;
 			const lineDiv = document.getElementById("poem-centered").children[burst.line];
-			//const lineDiv = document.querySelector(`#poem-centered :nth-child(${burst.line})`);
       let letters = poems[burst.poem].verses[burst.line]
         .split("")
         .map((letter, index) => {
@@ -249,7 +274,6 @@ function Canvas({ awareness }) {
       if (clientID !== myClientId) {
         // cursors[clientID].pc.addPoint([mouse.x, mouse.y]);
         cursors[clientID].sp.addPoint([mouse.x, mouse.y]);
-        // console.log(JSON.stringify(cursors[clientID].sp.points));
         if (!cursors[clientID].animating) {
           cursors[clientID].animating = true;
           cursors[clientID].splineStart = performance.now();
