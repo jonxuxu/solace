@@ -35,8 +35,9 @@ function getOffset(el) {
   };
 }
 
-function setPoem(idx) {
+function setPoem(idx, canvasScale) {
   const centered = document.getElementById("poem-centered");
+	centered.style.fontSize = `${32 / canvasScale}px`;
   while (centered.firstChild) {
     centered.removeChild(centered.firstChild);
   }
@@ -97,14 +98,14 @@ function Canvas({ awareness }) {
     if (currentPoem === -1) {
       currentPoem = 0;
       currentLine = 0;
-      setPoem(currentPoem);
+      setPoem(currentPoem, canvasScale);
     } else if (currentLine < poems[currentPoem].verses.length - 1) {
       currentLine++;
     } else {
       currentLine = 0;
       currentPoem = (currentPoem + 1) % poems.length;
       // TODO: current poem should fade away
-      setPoem(currentPoem);
+      setPoem(currentPoem, canvasScale);
     }
     // must wait a few seconds before getting the next line
     canAdvance = false;
@@ -188,7 +189,7 @@ function Canvas({ awareness }) {
     const posX = burst.x + a1 * v1X + a2 * v2X;
     const posY = burst.y + a1 * v1Y + a2 * v2Y;
     p5.push();
-    p5.textSize(32 * canvasScale);
+    p5.textSize(32);
     p5.text(letter, posX, posY);
     p5.pop();
   }
@@ -216,7 +217,7 @@ function Canvas({ awareness }) {
         clearInterval(advanceTimer);
       }
       if (currentPoem !== burst.poem) {
-        setPoem(burst.poem);
+        setPoem(burst.poem, canvasScale);
       }
       currentPoem = burst.poem;
       currentLine = burst.line;
