@@ -20,43 +20,43 @@ const burstTime2 = 3;
 const MAX_INTERVAL = 300;
 
 function getOffset(el) {
-	var body, _x, _y;
-	body = document.getElementsByTagName("body")[0];
-	_x = 0;
-	_y = 0;
-	while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
-		_x += el.offsetLeft - el.scrollLeft;
-		_y += el.offsetTop - el.scrollTop;
-		el = el.offsetParent;
-	}
-	return {
-		top: _y + body.scrollTop,
-		left: _x + body.scrollLeft
-	};
-};
+  var body, _x, _y;
+  body = document.getElementsByTagName("body")[0];
+  _x = 0;
+  _y = 0;
+  while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
+    _x += el.offsetLeft - el.scrollLeft;
+    _y += el.offsetTop - el.scrollTop;
+    el = el.offsetParent;
+  }
+  return {
+    top: _y + body.scrollTop,
+    left: _x + body.scrollLeft,
+  };
+}
 
 function setPoem(idx) {
-	const centered = document.getElementById("poem-centered");
-	while (centered.firstChild) {
-		centered.removeChild(centered.firstChild);
-	}
-	const verses = poems[idx].verses;
-	for (let i = 0; i < verses.length; i++) {
-		const verse = verses[i];
-		const line = document.createElement("div");
-		line.className = "poem-line";
-		for (let j = 0; j < verse.length; j++) {
-			const letter = document.createElement("div");
-			letter.className = "poem-letter";
-			if (verse[j] === " ") {
-				letter.innerHTML = "&nbsp;";
-			} else {
-				letter.innerHTML = verse[j];
-			}
-			line.appendChild(letter);
-		}
-		centered.appendChild(line);
-	}
+  const centered = document.getElementById("poem-centered");
+  while (centered.firstChild) {
+    centered.removeChild(centered.firstChild);
+  }
+  const verses = poems[idx].verses;
+  for (let i = 0; i < verses.length; i++) {
+    const verse = verses[i];
+    const line = document.createElement("div");
+    line.className = "poem-line";
+    for (let j = 0; j < verse.length; j++) {
+      const letter = document.createElement("div");
+      letter.className = "poem-letter";
+      if (verse[j] === " ") {
+        letter.innerHTML = "&nbsp;";
+      } else {
+        letter.innerHTML = verse[j];
+      }
+      line.appendChild(letter);
+    }
+    centered.appendChild(line);
+  }
 }
 
 function burstScale1(scale, t, endTime) {
@@ -88,30 +88,30 @@ function Canvas({ awareness }) {
   let xTranslate = 0;
   let yTranslate = 0;
 
-	let currentPoem = -1;
-	let currentLine = -1;
-	let canAdvance = true;
-	let advanceTimer = null;
+  let currentPoem = -1;
+  let currentLine = -1;
+  let canAdvance = true;
+  let advanceTimer = null;
 
-	function advanceLine() {
-		if (currentPoem === -1) {
-			currentPoem = 0;
-			currentLine = 0;
-			setPoem(currentPoem);
-		} else if (currentLine < poems[currentPoem].verses.length - 1) {
-			currentLine++;
-		} else {
-			currentLine = 0;
-			currentPoem = (currentPoem + 1) % poems.length;
-			// TODO: current poem should fade away
-			setPoem(currentPoem);
-		}
-		// must wait a few seconds before getting the next line
-		canAdvance = false;
-		advanceTimer = setInterval(() => {
-			canAdvance = true;
-		}, 5000);
-	}
+  function advanceLine() {
+    if (currentPoem === -1) {
+      currentPoem = 0;
+      currentLine = 0;
+      setPoem(currentPoem);
+    } else if (currentLine < poems[currentPoem].verses.length - 1) {
+      currentLine++;
+    } else {
+      currentLine = 0;
+      currentPoem = (currentPoem + 1) % poems.length;
+      // TODO: current poem should fade away
+      setPoem(currentPoem);
+    }
+    // must wait a few seconds before getting the next line
+    canAdvance = false;
+    advanceTimer = setInterval(() => {
+      canAdvance = true;
+    }, 5000);
+  }
 
   function mousePressed(p5) {
     if (debounce) {
@@ -141,9 +141,9 @@ function Canvas({ awareness }) {
           },
         });
       } else {
-				if (canAdvance) {
-					advanceLine();
-				}
+        if (canAdvance) {
+          advanceLine();
+        }
         clearInterval(holdTimer);
         holdState = 0;
         awareness.setLocalStateField("canvasInfo", {
@@ -155,7 +155,7 @@ function Canvas({ awareness }) {
           burst: {
             x: p5.mouseX * canvasScale + xTranslate,
             y: p5.mouseY * canvasScale + yTranslate,
-						poem: currentPoem,
+            poem: currentPoem,
             line: currentLine,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
@@ -212,15 +212,16 @@ function Canvas({ awareness }) {
       );
     }
     if (burst) {
-			if (currentPoem !== burst.poem || currentLine !== burst.line) {
-				clearInterval(advanceTimer);
-			}
-			if (currentPoem !== burst.poem) {
-				setPoem(burst.poem);
-			}
-			currentPoem = burst.poem;
-			currentLine = burst.line;
-			const lineDiv = document.getElementById("poem-centered").children[burst.line];
+      if (currentPoem !== burst.poem || currentLine !== burst.line) {
+        clearInterval(advanceTimer);
+      }
+      if (currentPoem !== burst.poem) {
+        setPoem(burst.poem);
+      }
+      currentPoem = burst.poem;
+      currentLine = burst.line;
+      const lineDiv =
+        document.getElementById("poem-centered").children[burst.line];
       let letters = poems[burst.poem].verses[burst.line]
         .split("")
         .map((letter, index) => {
@@ -273,6 +274,8 @@ function Canvas({ awareness }) {
             timeoutId: null,
             prevPoint: [0, 0],
             spline: new Spline(),
+            currAnimation: null,
+            startAnimation: performance.now(),
           };
         }
       }
@@ -292,6 +295,7 @@ function Canvas({ awareness }) {
 
   function addPoint(clientID, mouse) {
     const cursor = cursors[clientID];
+    // console.log(cursor);
     clearTimeout(cursor.timeoutId);
     const now = performance.now();
     const duration = Math.min(now - cursor.timestamp, MAX_INTERVAL);
@@ -303,12 +307,14 @@ function Canvas({ awareness }) {
       cursor.x = point[0];
       cursor.y = point[1];
       cursor.state = "stopped";
+      cursors[clientID] = cursor;
       return;
     }
     if (cursor.state === "stopped") {
       if (Vec.dist(cursor.prevPoint, point) < 4) {
         cursor.x = point[0];
         cursor.y = point[1];
+        cursors[clientID] = cursor;
         return;
       }
       cursor.spline.clear();
@@ -324,6 +330,7 @@ function Canvas({ awareness }) {
       cursor.timestamp = now;
       cursor.x = point[0];
       cursor.y = point[1];
+      cursors[clientID] = cursor;
       return;
     }
     const animation = {
@@ -334,18 +341,22 @@ function Canvas({ awareness }) {
     };
     cursor.prevPoint = point;
     cursor.timestamp = now;
+
     switch (cursor.state) {
       case "idle": {
         cursor.state = "animating";
         cursor.currAnimation = animation;
+        cursor.startAnimation = performance.now();
+        cursors[clientID] = cursor;
+        drawSpline(clientID);
         break;
       }
       case "animating": {
         cursor.queue.push(animation);
+        cursors[clientID] = cursor;
         break;
       }
     }
-    cursors[clientID] = cursor;
   }
 
   function setup(p5, canvasParentRef) {
@@ -411,7 +422,9 @@ function Canvas({ awareness }) {
       // Calculate x,y from spline. Adapted animateNext to be called on each render frame instead on every cursor update
 
       if (key != myClientId) {
+        // if (p5.frameCount % 10 === 0) {
         drawSpline(key);
+        // }
       } else {
         cursors[key].x = p5.mouseX * canvasScale + xTranslate;
         cursors[key].y = p5.mouseY * canvasScale + yTranslate;
@@ -456,17 +469,19 @@ function Canvas({ awareness }) {
   }
 
   function drawSpline(key) {
-    console.log("updateSpline");
     if (cursors[key].state == "animating") {
       const t =
-        (performance.now() - cursors[key].animationStart) /
+        (performance.now() - cursors[key].startAnimation) /
         cursors[key].currAnimation.duration;
+
       if (t <= 1) {
         if (cursors[key].spline.points.length > 0) {
           try {
+            // console.log(t + cursors[key].currAnimation.start);
             const point = cursors[key].spline.getSplinePoint(
               t + cursors[key].currAnimation.start
             );
+            console.log("SETTING POINT");
             cursors[key].x = point[0];
             cursors[key].y = point[1];
           } catch (e) {
@@ -474,17 +489,23 @@ function Canvas({ awareness }) {
           }
           return;
         }
+      }
+      const next = cursors[key].queue.shift();
+      if (next) {
+        cursors[key].state = "animating";
+        cursors[key].currAnimation = next;
+        cursors[key].startAnimation = performance.now();
       } else {
-        const next = cursors[key].queue.shift();
-        if (next) {
-          cursors[key].state = "animating";
-          cursors[key].currAnimation = next;
-        } else {
-          cursors[key].state = "idle";
-          cursors[key].timeoutId = setTimeout(() => {
-            cursors[key].state = "stopped";
-          }, MAX_INTERVAL);
-        }
+        cursors[key].state = "idle";
+        /*
+        const point =
+          cursors[key].spline.points[1 + cursors[key].currAnimation.start];
+        cursors[key].x = point[0];
+        cursors[key].y = point[1];
+        */
+        cursors[key].timeoutId = setTimeout(() => {
+          cursors[key].state = "stopped";
+        }, MAX_INTERVAL);
       }
     }
   }
