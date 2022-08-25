@@ -30,6 +30,7 @@ function burstScale2(t) {
   //return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+
 function Canvas({ awareness }) {
   let bigRipples = [];
   let smallRipples = [];
@@ -78,7 +79,6 @@ function Canvas({ awareness }) {
       } else {
         clearInterval(holdTimer);
         holdState = 0;
-        const now = Date.now();
         awareness.setLocalStateField("canvasInfo", {
           bigRipple: {
             x: p5.mouseX * canvasScale + xTranslate,
@@ -110,17 +110,17 @@ function Canvas({ awareness }) {
       },
     });
   }
-
-  function drawLetter(p5, letterInfo, burst, time) {
-    const { letter, index, scale, v1X, v1Y, v2X, v2Y, endTime } = letterInfo;
-    time = Math.min(time, endTime);
-    const a1 = burstScale1(scale, time);
-    //const a2 = burstScale2((time + burstTime2 - endTime) / burstTime2);
-    const a2 = burstScale2(time / endTime);
-    const posX = burst.x + a1 * v1X + a2 * v2X;
-    const posY = burst.y + a1 * v1Y + a2 * v2Y;
-    p5.text(letter, posX, posY);
-  }
+	
+	function drawLetter(p5, letterInfo, burst, time) {
+		const { letter, scale, v1X, v1Y, v2X, v2Y, endTime } = letterInfo;
+		time = Math.min(time, endTime);
+		const a1 = burstScale1(scale, time);
+		//const a2 = burstScale2((time + burstTime2 - endTime) / burstTime2);
+		const a2 = burstScale2(time / endTime);
+		const posX = burst.x + a1 * v1X + a2 * v2X;
+		const posY = burst.y + a1 * v1Y + a2 * v2Y;
+		p5.text(letter, posX, posY);
+	}
 
   function awarenessUpdate(p5, clientID, canvasInfo) {
     const { smallRipple, bigRipple, burst, mouse, removed } = canvasInfo;
@@ -222,7 +222,7 @@ function Canvas({ awareness }) {
   function setup(p5, canvasParentRef) {
     let width = canvasParentRef.offsetWidth;
     let height = canvasParentRef.offsetHeight;
-    let cnv = p5.createCanvas(width, height).parent(canvasParentRef);
+    p5.createCanvas(width, height).parent(canvasParentRef);
     p5.ellipseMode(p5.RADIUS);
     awareness.on("change", ({ updated }) => {
       if (updated) {
@@ -277,7 +277,7 @@ function Canvas({ awareness }) {
       p5.fill(color);
 
       // Calculate x,y from spline
-      if (key != myClientId && value.animating && value.sp.points.length > 1) {
+      if (key !== myClientId && value.animating && value.sp.points.length > 1) {
         const splineNow = performance.now();
         const point = value.sp.getSplinePoint(
           value.currFrame + (splineNow - value.splineStart) / 30
@@ -342,38 +342,6 @@ function Canvas({ awareness }) {
     p5.stroke(255, alpha);
     p5.ellipse(ripple.x, ripple.y, radius);
   }
-
-  /*
-	const newSmallRipple = (p5) => {
-		if (lastSmallRipple) {
-			const x1 = lastSmallRipple.x;
-			const y1 = lastSmallRipple.y;
-			const t1 = lastSmallRipple.startTime;
-			const x2 = p5.mouseX;
-			const y2 = p5.mouseY;
-			const t2 = Date.now();
-			const dt = t2 - t1;
-			const dx = x2 - x1;
-			const dy = y2 - y1;
-			const d = Math.sqrt(dx * dx + dy * dy);
-			if (dt / 2000 + d / 20 > 0) {
-				lastSmallRipple = { x: x2, y: y2, startTime: t2 };
-				awareness.setLocalStateField("canvasInfo", { mouse: lastSmallRipple });
-			}
-		} else {
-			lastSmallRipple = { x: p5.mouseX, y: p5.mouseY, startTime: Date.now() };
-			awareness.setLocalStateField("canvasInfo", { mouse: lastSmallRipple });
-		}
-	}
-	*/
-
-  const drawLetter1 = (p5, letter, startX, startY, time) => {
-    let t = time / burstTime1;
-    t = Math.sqrt(t);
-    const x = startX + (letter.midX - startX) * t;
-    const y = startY + (letter.midY - startY) * t;
-    p5.text(letter.letter, x, y);
-  };
 
   return (
     <Sketch

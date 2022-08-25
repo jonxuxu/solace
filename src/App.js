@@ -67,6 +67,43 @@ function App() {
 
   return (
     <MainDiv>
+			<div class="poem-fullscreen">
+				<div id="poem-centered">
+					<div class="poem-line">
+						<div class="poem-letter">R</div>
+						<div class="poem-letter">o</div>
+						<div class="poem-letter">s</div>
+						<div class="poem-letter">e</div>
+						<div class="poem-letter">s</div>
+						<div class="poem-space">&nbsp;</div>
+						<div class="poem-letter">a</div>
+						<div class="poem-letter">r</div>
+						<div class="poem-letter">e</div>
+						<div class="poem-space">&nbsp;</div>
+						<div class="poem-letter">r</div>
+						<div class="poem-letter">e</div>
+						<div class="poem-letter">d</div>
+					</div>
+					<div class="poem-line">
+						<div class="poem-letter">V</div>
+						<div class="poem-letter">i</div>
+						<div class="poem-letter">o</div>
+						<div class="poem-letter">l</div>
+						<div class="poem-letter">e</div>
+						<div class="poem-letter">t</div>
+						<div class="poem-letter">s</div>
+						<div class="poem-space">&nbsp;</div>
+						<div class="poem-letter">a</div>
+						<div class="poem-letter">r</div>
+						<div class="poem-letter">e</div>
+						<div class="poem-space">&nbsp;</div>
+						<div class="poem-letter">b</div>
+						<div class="poem-letter">l</div>
+						<div class="poem-letter">u</div>
+						<div class="poem-letter">e</div>
+					</div>
+				</div>
+			</div>
       {isPlaying ? (
         <Canvas awareness={awareness} />
       ) : (
