@@ -3,20 +3,21 @@ import { Spline } from "./Spline";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
+import poems from "./poems.json";
 
 // constant parameters to control animation
-const cursorRadius = 6;
+const cursorRadius = 9;
 const cursorAlpha = 100;
 const bigRippleSpeed = 50;
 const bigRippleMaxTime = 3;
-const bigRippleWidth = 2;
+const bigRippleWidth = 4;
 const smallRippleSpeed = 20;
 const smallRippleMaxTime = 3;
-const smallRippleWidth = 2;
+const smallRippleWidth = 2.5;
 const burstTime1 = 1;
 const burstTime2 = 3;
 
-const poem = ["I am a poem", "ABCDE", "This is the third line of the poem"];
+const poem = poems[0].verses;
 
 function burstScale1(scale, t, endTime) {
   t = Math.min(t / (burstTime1 + burstTime2), 1);
@@ -34,8 +35,10 @@ function Canvas({ awareness }) {
   let smallRipples = [];
   let bursts = [];
 
+  // Charge animation
   let holdState = 0;
   let holdTimer = null;
+
   const myClientId = awareness.clientID;
   let cursors = { [myClientId]: { x: 0, y: 0 } };
 
