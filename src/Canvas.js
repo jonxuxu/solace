@@ -3,6 +3,7 @@ import { Spline } from "./Spline";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
+//import poems from './poems.json';
 
 // constant parameters to control animation
 const cursorRadius = 6;
@@ -16,7 +17,68 @@ const smallRippleWidth = 2;
 const burstTime1 = 1;
 const burstTime2 = 3;
 
-const poem = ["I am a poem", "ABCDE", "This is the third line of the poem"];
+const poems = [
+    {
+        "title": "Here Together",
+        "author": "W.S. Merwin",
+        "verses":[
+						"hi",
+            "These days I can see us clinging to each other",
+            "as we are swept along by the current",
+            "I am clinging to you to keep you from",
+            "being swept away and you are clinging to me",
+            "we see the shores blurring past as we hold",
+            "each other in the rushing current",
+            "the daylight rushes unheard far above us",
+            "how long will we be swept along in the daylight",
+            "how long we cling together in the night",
+            "and where will carry us together"
+        ]
+    },
+];
+
+function getOffset(el) {
+	var body, _x, _y;
+	body = document.getElementsByTagName("body")[0];
+	_x = 0;
+	_y = 0;
+	console.log(el, el.offsetLeft, el.offsetTop);
+	while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
+		_x += el.offsetLeft - el.scrollLeft;
+		_y += el.offsetTop - el.scrollTop;
+		el = el.offsetParent;
+	}
+	return {
+		top: _y + body.scrollTop,
+		left: _x + body.scrollLeft
+	};
+};
+
+function setPoem(idx) {
+	const centered = document.getElementById("poem-centered");
+	while (centered.firstChild) {
+		centered.removeChild(centered.firstChild);
+	}
+	const verses = poems[idx].verses;
+	console.log(verses.length);
+	for (let i = 0; i < verses.length; i++) {
+		const verse = verses[i];
+		const line = document.createElement("div");
+		line.className = "poem-line";
+		for (let j = 0; j < verse.length; j++) {
+			const letter = document.createElement("div");
+			letter.className = "poem-letter";
+			if (verse[j] === " ") {
+				letter.innerHTML = "&nbsp;";
+			} else {
+				letter.innerHTML = verse[j];
+			}
+			line.appendChild(letter);
+		}
+		centered.appendChild(line);
+		console.log(line);
+	}
+}
 
 function burstScale1(scale, t, endTime) {
   t = Math.min(t / (burstTime1 + burstTime2), 1);
@@ -28,7 +90,6 @@ function burstScale2(t) {
   else return -(Math.cos(Math.PI * t) - 1) / 2;
   //return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
-
 
 function Canvas({ awareness }) {
   let bigRipples = [];
@@ -45,6 +106,8 @@ function Canvas({ awareness }) {
   let canvasScale = 1;
   let xTranslate = 0;
   let yTranslate = 0;
+
+	let currentPoem = -1;
 
   function mousePressed(p5) {
     if (debounce) {
@@ -85,7 +148,8 @@ function Canvas({ awareness }) {
           burst: {
             x: p5.mouseX * canvasScale + xTranslate,
             y: p5.mouseY * canvasScale + yTranslate,
-            line: 2,
+						poem: 0,
+            line: 0,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
         });
@@ -116,7 +180,11 @@ function Canvas({ awareness }) {
 		const a2 = burstScale2(time / endTime);
 		const posX = burst.x + a1 * v1X + a2 * v2X;
 		const posY = burst.y + a1 * v1Y + a2 * v2Y;
+		p5.push();
+		//p5.scale(canvasScale);
+		//p5.translate(xTranslate, yTranslate);
 		p5.text(letter, posX, posY);
+		p5.pop();
 	}
 
   function awarenessUpdate(p5, clientID, canvasInfo) {
@@ -138,20 +206,29 @@ function Canvas({ awareness }) {
       );
     }
     if (burst) {
-      let letters = poem[burst.line]
+			if (currentPoem != burst.poem) {
+				currentPoem = burst.poem;
+				setPoem(currentPoem);
+			}
+			console.log(document.getElementById("poem-centered").children);
+			const lineDiv = document.getElementById("poem-centered").children[burst.line];
+			//const lineDiv = document.querySelector(`#poem-centered :nth-child(${burst.line})`);
+      let letters = poems[burst.poem].verses[burst.line]
         .split("")
         .map((letter, index) => {
+					const letterDiv = lineDiv.children[index];
+					const { top, left } = getOffset(letterDiv);
+					console.log(top, left);
           const randomAngle = Math.random() * Math.PI * 2;
-          const scale = 100 + Math.random() * 50;
+          const scale = 150 + Math.random() * 50;
           const v1X = Math.cos(randomAngle);
           const v1Y = Math.sin(randomAngle);
           const endTime = burstTime1 + Math.random() + burstTime2;
           const s1 = burstScale1(scale, endTime);
           const midPosX = burst.x + v1X * s1;
           const midPosY = burst.y + v1Y * s1;
-          // TODO: set endPos properly
-          const endPosX = 500 + 10 * index;
-          const endPosY = 500 + 20 * burst.line;
+          const endPosX = left;
+          const endPosY = top;
           const v2X = endPosX - midPosX;
           const v2Y = endPosY - midPosY;
 
