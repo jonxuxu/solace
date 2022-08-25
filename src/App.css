@@ -6,10 +6,35 @@ html, body {
 }
 
 .Canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.poem-fullscreen {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+}
+
+.poem-line {
+	white-space: nowrap;
+}
+
+.poem-space {
+	display: inline-block;
+}
+
+.poem-letter {
+	display: inline-block;
+}
