@@ -281,12 +281,6 @@ function Canvas({ awareness }) {
         addPoint(clientID, mouse);
       }
       cursors[clientID].holdState = mouse.holdState;
-      // Remove cursors that are no longer in the awareness
-      if (removed) {
-        removed.forEach((clientID) => {
-          delete cursors[clientID];
-        });
-      }
     }
   }
 
@@ -356,7 +350,7 @@ function Canvas({ awareness }) {
     p5.textFont("Crimson Text");
     p5.textAlign(p5.LEFT, p5.TOP);
 
-    awareness.on("change", ({ updated }) => {
+    awareness.on("change", ({ updated, removed }) => {
       if (updated) {
         const states = awareness.getStates();
         updated.forEach((clientID) => {
@@ -365,6 +359,12 @@ function Canvas({ awareness }) {
             awarenessUpdate(p5, clientID, canvasInfo);
           }
         });
+				// Remove cursors that are no longer in the awareness
+				if (removed) {
+					removed.forEach((clientID) => {
+						delete cursors[clientID];
+					});
+				}
       }
     });
     // Scale p5 canvas based on 1920x1080
