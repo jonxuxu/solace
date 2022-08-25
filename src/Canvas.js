@@ -19,7 +19,48 @@ const burstTime1 = 1;
 const burstTime2 = 3;
 const MAX_INTERVAL = 300;
 
-const poem = poems[0].verses;
+function getOffset(el) {
+  var body, _x, _y;
+  body = document.getElementsByTagName("body")[0];
+  _x = 0;
+  _y = 0;
+  console.log(el, el.offsetLeft, el.offsetTop);
+  while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
+    _x += el.offsetLeft - el.scrollLeft;
+    _y += el.offsetTop - el.scrollTop;
+    el = el.offsetParent;
+  }
+  return {
+    top: _y + body.scrollTop,
+    left: _x + body.scrollLeft,
+  };
+}
+
+function setPoem(idx) {
+  const centered = document.getElementById("poem-centered");
+  while (centered.firstChild) {
+    centered.removeChild(centered.firstChild);
+  }
+  const verses = poems[idx].verses;
+  console.log(verses.length);
+  for (let i = 0; i < verses.length; i++) {
+    const verse = verses[i];
+    const line = document.createElement("div");
+    line.className = "poem-line";
+    for (let j = 0; j < verse.length; j++) {
+      const letter = document.createElement("div");
+      letter.className = "poem-letter";
+      if (verse[j] === " ") {
+        letter.innerHTML = "&nbsp;";
+      } else {
+        letter.innerHTML = verse[j];
+      }
+      line.appendChild(letter);
+    }
+    centered.appendChild(line);
+    console.log(line);
+  }
+}
 
 function burstScale1(scale, t, endTime) {
   t = Math.min(t / (burstTime1 + burstTime2), 1);
@@ -49,6 +90,8 @@ function Canvas({ awareness }) {
   let canvasScale = 1;
   let xTranslate = 0;
   let yTranslate = 0;
+
+  let currentPoem = -1;
 
   function mousePressed(p5) {
     if (debounce) {
@@ -89,7 +132,8 @@ function Canvas({ awareness }) {
           burst: {
             x: p5.mouseX * canvasScale + xTranslate,
             y: p5.mouseY * canvasScale + yTranslate,
-            line: 2,
+            poem: 0,
+            line: 0,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
         });
@@ -120,7 +164,10 @@ function Canvas({ awareness }) {
     const a2 = burstScale2(time / endTime);
     const posX = burst.x + a1 * v1X + a2 * v2X;
     const posY = burst.y + a1 * v1Y + a2 * v2Y;
+    p5.push();
+    p5.textSize(32 * canvasScale);
     p5.text(letter, posX, posY);
+    p5.pop();
   }
 
   function awarenessUpdate(p5, clientID, canvasInfo) {
@@ -142,20 +189,29 @@ function Canvas({ awareness }) {
       );
     }
     if (burst) {
-      let letters = poem[burst.line]
+      if (currentPoem != burst.poem) {
+        currentPoem = burst.poem;
+        setPoem(currentPoem);
+      }
+      console.log(document.getElementById("poem-centered").children);
+      const lineDiv =
+        document.getElementById("poem-centered").children[burst.line];
+      //const lineDiv = document.querySelector(`#poem-centered :nth-child(${burst.line})`);
+      let letters = poems[burst.poem].verses[burst.line]
         .split("")
         .map((letter, index) => {
+          const letterDiv = lineDiv.children[index];
+          const { top, left } = getOffset(letterDiv);
           const randomAngle = Math.random() * Math.PI * 2;
-          const scale = 100 + Math.random() * 50;
+          const scale = 150 + Math.random() * 50;
           const v1X = Math.cos(randomAngle);
           const v1Y = Math.sin(randomAngle);
           const endTime = burstTime1 + Math.random() + burstTime2;
           const s1 = burstScale1(scale, endTime);
           const midPosX = burst.x + v1X * s1;
           const midPosY = burst.y + v1Y * s1;
-          // TODO: set endPos properly
-          const endPosX = 500 + 10 * index;
-          const endPosY = 500 + 20 * burst.line;
+          const endPosX = left * canvasScale + xTranslate;
+          const endPosY = top * canvasScale + yTranslate;
           const v2X = endPosX - midPosX;
           const v2Y = endPosY - midPosY;
 
@@ -195,11 +251,12 @@ function Canvas({ awareness }) {
             spline: new Spline(),
           };
         }
-        if (clientID !== myClientId) {
-          addPoint(clientID, mouse);
-        }
-        cursors[clientID].holdState = mouse.holdState;
       }
+
+      if (clientID !== myClientId) {
+        addPoint(clientID, mouse);
+      }
+      cursors[clientID].holdState = mouse.holdState;
       // Remove cursors that are no longer in the awareness
       if (removed) {
         removed.forEach((clientID) => {
@@ -272,6 +329,9 @@ function Canvas({ awareness }) {
     let height = canvasParentRef.offsetHeight;
     p5.createCanvas(width, height).parent(canvasParentRef);
     p5.ellipseMode(p5.RADIUS);
+    p5.textFont("Crimson Text");
+    p5.textAlign(p5.LEFT, p5.TOP);
+
     awareness.on("change", ({ updated }) => {
       if (updated) {
         const states = awareness.getStates();
@@ -325,37 +385,12 @@ function Canvas({ awareness }) {
       p5.fill(color);
 
       // Calculate x,y from spline. Adapted animateNext to be called on each render frame instead on every cursor update
-      if (key !== myClientId) {
-        if (cursor.animating) {
-          const t =
-            (performance.now() - cursor.animationStart) /
-            cursors[key].currAnimation.duration;
-          if (t <= 1) {
-            if (cursor.spline.points.length > 0) {
-            }
-            try {
-              const point = cursor.spline.getSplinePoint(
-                t + cursors[key].currAnimation.start
-              );
-              cursors[key].x = point[0];
-              cursors[key].y = point[1];
-            } catch (e) {
-              console.warn(e);
-            }
-            return;
-          } else {
-            const next = cursors[key].queue.shift();
-            if (next) {
-              cursors[key].state = "animating";
-              cursors[key].currAnimation = next;
-            } else {
-              cursors[key].state = "idle";
-              cursors[key].timeoutId = setTimeout(() => {
-                cursors[key].state = "stopped";
-              }, MAX_INTERVAL);
-            }
-          }
-        }
+
+      if (key != myClientId) {
+        updateSpline(key);
+      } else {
+        cursors[key].x = p5.mouseX * canvasScale + xTranslate;
+        cursors[key].y = p5.mouseY * canvasScale + yTranslate;
       }
       p5.ellipse(cursor.x, cursor.y, radius);
     }
@@ -394,6 +429,39 @@ function Canvas({ awareness }) {
         drawLetter(p5, letter, burst, time);
       });
     });
+  }
+
+  function updateSpline(key) {
+    if (cursors[key].state == "animating") {
+      const t =
+        (performance.now() - cursors[key].animationStart) /
+        cursors[key].currAnimation.duration;
+      if (t <= 1) {
+        if (cursors[key].spline.points.length > 0) {
+          try {
+            const point = cursors[key].spline.getSplinePoint(
+              t + cursors[key].currAnimation.start
+            );
+            cursors[key].x = point[0];
+            cursors[key].y = point[1];
+          } catch (e) {
+            console.warn(e);
+          }
+          return;
+        }
+      } else {
+        const next = cursors[key].queue.shift();
+        if (next) {
+          cursors[key].state = "animating";
+          cursors[key].currAnimation = next;
+        } else {
+          cursors[key].state = "idle";
+          cursors[key].timeoutId = setTimeout(() => {
+            cursors[key].state = "stopped";
+          }, MAX_INTERVAL);
+        }
+      }
+    }
   }
 
   function drawBigRipple(p5, ripple, time) {
