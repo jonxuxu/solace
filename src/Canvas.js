@@ -1,5 +1,6 @@
 import { PerfectCursor } from "perfect-cursors";
 import { Spline } from "./Spline";
+import { Vec } from "@tldraw/vec";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
@@ -16,6 +17,7 @@ const smallRippleMaxTime = 3;
 const smallRippleWidth = 2.5;
 const burstTime1 = 1;
 const burstTime2 = 3;
+const MAX_INTERVAL = 300;
 
 const poem = poems[0].verses;
 
@@ -29,7 +31,6 @@ function burstScale2(t) {
   else return -(Math.cos(Math.PI * t) - 1) / 2;
   //return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
-
 
 function Canvas({ awareness }) {
   let bigRipples = [];
@@ -110,17 +111,17 @@ function Canvas({ awareness }) {
       },
     });
   }
-	
-	function drawLetter(p5, letterInfo, burst, time) {
-		const { letter, scale, v1X, v1Y, v2X, v2Y, endTime } = letterInfo;
-		time = Math.min(time, endTime);
-		const a1 = burstScale1(scale, time);
-		//const a2 = burstScale2((time + burstTime2 - endTime) / burstTime2);
-		const a2 = burstScale2(time / endTime);
-		const posX = burst.x + a1 * v1X + a2 * v2X;
-		const posY = burst.y + a1 * v1Y + a2 * v2Y;
-		p5.text(letter, posX, posY);
-	}
+
+  function drawLetter(p5, letterInfo, burst, time) {
+    const { letter, scale, v1X, v1Y, v2X, v2Y, endTime } = letterInfo;
+    time = Math.min(time, endTime);
+    const a1 = burstScale1(scale, time);
+    //const a2 = burstScale2((time + burstTime2 - endTime) / burstTime2);
+    const a2 = burstScale2(time / endTime);
+    const posX = burst.x + a1 * v1X + a2 * v2X;
+    const posY = burst.y + a1 * v1Y + a2 * v2Y;
+    p5.text(letter, posX, posY);
+  }
 
   function awarenessUpdate(p5, clientID, canvasInfo) {
     const { smallRipple, bigRipple, burst, mouse, removed } = canvasInfo;
@@ -181,42 +182,89 @@ function Canvas({ awareness }) {
     }
 
     if (mouse) {
+      // Add to spline if not own cursor
       if (!cursors[clientID]) {
         cursors[clientID] = {};
         if (clientID !== myClientId) {
-          // function updateMyCursor(point) {
-          //   cursors[clientID].x = point[0];
-          //   cursors[clientID].y = point[1];
-          // }
-          // cursors[clientID].pc = new PerfectCursor(updateMyCursor);
-          cursors[clientID].sp = new Spline();
+          cursors[clientID] = {
+            state: "idle",
+            queue: [],
+            timestamp: performance.now(),
+            timeoutId: null,
+            prevPoint: [0, 0],
+            spline: new Spline(),
+          };
         }
-      }
-      if (clientID !== myClientId) {
-        // cursors[clientID].pc.addPoint([mouse.x, mouse.y]);
-        cursors[clientID].sp.addPoint([mouse.x, mouse.y]);
-        // console.log(JSON.stringify(cursors[clientID].sp.points));
-        if (!cursors[clientID].animating) {
-          cursors[clientID].animating = true;
-          cursors[clientID].splineStart = performance.now();
-          cursors[clientID].currFrame = 0;
-          cursors[clientID].idleTimer = setTimeout(() => {
-            cursors[clientID].animating = false;
-            cursors[clientID].sp.clear();
-            cursors[clientID].currFrame = 0;
-          }, 300);
-        } else {
-          clearTimeout(cursors[clientID].idleTimer);
+        if (clientID !== myClientId) {
+          addPoint(clientID, mouse);
         }
+        cursors[clientID].holdState = mouse.holdState;
       }
-      cursors[clientID].holdState = mouse.holdState;
+      // Remove cursors that are no longer in the awareness
+      if (removed) {
+        removed.forEach((clientID) => {
+          delete cursors[clientID];
+        });
+      }
     }
-    // Remove cursors that are no longer in the awareness
-    if (removed) {
-      removed.forEach((clientID) => {
-        delete cursors[clientID];
-      });
+  }
+
+  function addPoint(clientID, mouse) {
+    const cursor = cursors[clientID];
+    clearTimeout(cursor.timeoutId);
+    const now = performance.now();
+    const duration = Math.min(now - cursor.timestamp, MAX_INTERVAL);
+    const point = [mouse.x, mouse.y];
+    if (!cursor.prevPoint) {
+      cursor.spline.clear();
+      cursor.prevPoint = point;
+      cursor.spline.addPoint(point);
+      cursor.x = point[0];
+      cursor.y = point[1];
+      cursor.state = "stopped";
+      return;
     }
+    if (cursor.state === "stopped") {
+      if (Vec.dist(cursor.prevPoint, point) < 4) {
+        cursor.x = point[0];
+        cursor.y = point[1];
+        return;
+      }
+      cursor.spline.clear();
+      cursor.spline.addPoint(cursor.prevPoint);
+      cursor.spline.addPoint(cursor.prevPoint);
+      cursor.spline.addPoint(point);
+      cursor.state = "idle";
+    } else {
+      cursor.spline.addPoint(point);
+    }
+    if (duration < 16) {
+      cursor.prevPoint = point;
+      cursor.timestamp = now;
+      cursor.x = point[0];
+      cursor.y = point[1];
+      return;
+    }
+    const animation = {
+      start: cursor.spline.points.length - 3,
+      from: cursor.prevPoint,
+      to: point,
+      duration,
+    };
+    cursor.prevPoint = point;
+    cursor.timestamp = now;
+    switch (cursor.state) {
+      case "idle": {
+        cursor.state = "animating";
+        cursor.currAnimation = animation;
+        break;
+      }
+      case "animating": {
+        cursor.queue.push(animation);
+        break;
+      }
+    }
+    cursors[clientID] = cursor;
   }
 
   function setup(p5, canvasParentRef) {
@@ -267,28 +315,49 @@ function Canvas({ awareness }) {
     p5.noStroke();
     cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
     cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
-    for (const [key, value] of Object.entries(cursors)) {
+    for (const [key, cursor] of Object.entries(cursors)) {
       // Calculate color and size from charge state
       let color = p5.color(
         255,
-        cursorAlpha + ((255 - cursorAlpha) * value.holdState) / 100
+        cursorAlpha + ((255 - cursorAlpha) * cursor.holdState) / 100
       );
-      let radius = cursorRadius + (cursorRadius * value.holdState) / 100;
+      let radius = cursorRadius + (cursorRadius * cursor.holdState) / 100;
       p5.fill(color);
 
-      // Calculate x,y from spline
-      if (key !== myClientId && value.animating && value.sp.points.length > 1) {
-        const splineNow = performance.now();
-        const point = value.sp.getSplinePoint(
-          value.currFrame + (splineNow - value.splineStart) / 30
-        );
-        cursors[key].x = point[0];
-        cursors[key].y = point[1];
-        if ((splineNow - value.splineStart) / 30 > 1) {
-          cursors[key].currFrame++;
+      // Calculate x,y from spline. Adapted animateNext to be called on each render frame instead on every cursor update
+      if (key !== myClientId) {
+        if (cursor.animating) {
+          const t =
+            (performance.now() - cursor.animationStart) /
+            cursors[key].currAnimation.duration;
+          if (t <= 1) {
+            if (cursor.spline.points.length > 0) {
+            }
+            try {
+              const point = cursor.spline.getSplinePoint(
+                t + cursors[key].currAnimation.start
+              );
+              cursors[key].x = point[0];
+              cursors[key].y = point[1];
+            } catch (e) {
+              console.warn(e);
+            }
+            return;
+          } else {
+            const next = cursors[key].queue.shift();
+            if (next) {
+              cursors[key].state = "animating";
+              cursors[key].currAnimation = next;
+            } else {
+              cursors[key].state = "idle";
+              cursors[key].timeoutId = setTimeout(() => {
+                cursors[key].state = "stopped";
+              }, MAX_INTERVAL);
+            }
+          }
         }
       }
-      p5.ellipse(value.x, value.y, radius);
+      p5.ellipse(cursor.x, cursor.y, radius);
     }
 
     p5.fill(0, 0); // fully transparent
