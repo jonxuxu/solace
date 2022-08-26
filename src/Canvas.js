@@ -6,7 +6,13 @@ import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
 
-function Canvas({ awareness }) {
+function Canvas({ awareness, onStart }) {
+  let gameState = "start";
+  let needsRotate = false;
+
+  // Start screen
+  let startFade = 0;
+
   let bigRipples = [];
   let smallRipples = [];
   let bursts = [];
@@ -27,6 +33,25 @@ function Canvas({ awareness }) {
   let poemEngine = null;
   let canAdvance = true;
 
+  // Adjust canvas scale and translate based on screen size
+  function windowResized(p5) {
+    const width = p5.windowWidth;
+    const height = p5.windowHeight;
+
+    // Scale p5 canvas based on 1920x1080
+    if (height / width > 1080 / 1920) {
+      canvasScale = 1080 / height;
+      xTranslate = 960 - (width * canvasScale) / 2;
+    } else {
+      canvasScale = 1920 / width;
+      yTranslate = 540 - (height * canvasScale) / 2;
+    }
+
+    needsRotate = height > width;
+
+    p5.resizeCanvas(width, height);
+  }
+
   function mousePressed(p5) {
     if (debounce) {
       return;
@@ -35,6 +60,20 @@ function Canvas({ awareness }) {
     setTimeout(() => {
       debounce = false;
     }, 300);
+
+    if (gameState === "start") {
+      onStart();
+      const fadeInterval = setInterval(() => {
+        startFade += 5;
+        if (startFade >= 255) {
+          clearInterval(fadeInterval);
+          startFade = 1;
+          gameState = "play";
+        }
+      }, 50);
+      return;
+    }
+
     awareness.setLocalStateField("canvasInfo", {
       smallRipple: {
         x: p5.mouseX * canvasScale + xTranslate,
@@ -73,6 +112,11 @@ function Canvas({ awareness }) {
             line: poemEngine.currentLine,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
+          mouse: {
+            x: p5.mouseX * canvasScale + xTranslate,
+            y: p5.mouseY * canvasScale + yTranslate,
+            holdState: holdState,
+          },
         });
       }
     }, 100);
@@ -84,13 +128,18 @@ function Canvas({ awareness }) {
   }
 
   function mouseMoved(p5) {
-    awareness.setLocalStateField("canvasInfo", {
-      mouse: {
-        x: p5.mouseX,
-        y: p5.mouseY,
-        holdState: holdState,
-      },
-    });
+    // Update mouse position every frame
+    if (stale > 7) {
+      awareness.setLocalStateField("canvasInfo", {
+        mouse: {
+          x: p5.mouseX * canvasScale + xTranslate,
+          y: p5.mouseY * canvasScale + yTranslate,
+          holdState: holdState,
+        },
+      });
+      stale = 0;
+    }
+    stale++;
   }
 
   function awarenessUpdate(p5, clientID, canvasInfo) {
@@ -166,47 +215,47 @@ function Canvas({ awareness }) {
         }
       }
     });
-    // Scale p5 canvas based on 1920x1080
-    if (height / width > 1080 / 1920) {
-      canvasScale = 1080 / height;
-      xTranslate = 960 - (width * canvasScale) / 2;
-    } else {
-      canvasScale = 1920 / width;
-      yTranslate = 540 - (height * canvasScale) / 2;
-    }
+
     poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate);
   }
 
   function draw(p5) {
     p5.background(0);
-    p5.scale(1 / canvasScale);
-    p5.translate(-xTranslate, -yTranslate);
 
-    // Update mouse position every frame
-    if (stale > 7) {
-      awareness.setLocalStateField("canvasInfo", {
-        mouse: {
-          x: p5.mouseX * canvasScale + xTranslate,
-          y: p5.mouseY * canvasScale + yTranslate,
-          holdState: holdState,
-        },
-      });
-      stale = 0;
+    if (needsRotate) {
+      p5.fill(255 - startFade);
+      p5.textSize(32);
+      // TODO: Fix hardcode?
+      p5.text(
+        "REEEEEEEEEEEE ROTATE YOUR PHONE U TWAT",
+        p5.width / 2 - 30,
+        p5.height / 2 - 10
+      );
+      return;
     }
-    stale++;
 
-    p5.noStroke();
-    cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
-    cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
-    DrawFns.drawCursors(p5, cursors, myClientId);
+    if (gameState === "start") {
+      p5.fill(255 - startFade);
+      p5.textSize(32);
+      // TODO: Fix hardcode?
+      p5.text("Solace", p5.width / 2 - 30, p5.height / 2 - 10);
+    } else if (gameState === "play") {
+      p5.scale(1 / canvasScale);
+      p5.translate(-xTranslate, -yTranslate);
 
-    p5.fill(0, 0); // fully transparent
-    bigRipples = DrawFns.drawBigRipples(p5, bigRipples);
-    smallRipples = DrawFns.drawSmallRipples(p5, smallRipples);
+      p5.noStroke();
+      cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
+      cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
+      DrawFns.drawCursors(p5, cursors, myClientId);
 
-    p5.fill(255);
-    p5.noStroke();
-    DrawFns.drawBurst(p5, bursts);
+      p5.fill(0, 0); // fully transparent
+      bigRipples = DrawFns.drawBigRipples(p5, bigRipples);
+      smallRipples = DrawFns.drawSmallRipples(p5, smallRipples);
+
+      p5.fill(255);
+      p5.noStroke();
+      DrawFns.drawBurst(p5, bursts);
+    }
   }
 
   return (
@@ -215,7 +264,9 @@ function Canvas({ awareness }) {
       draw={draw}
       mousePressed={mousePressed}
       mouseReleased={mouseReleased}
+      mouseMoved={mouseMoved}
       className="Canvas"
+      windowResized={windowResized}
     />
   );
 }

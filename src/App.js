@@ -50,9 +50,8 @@ function playNote() {
 }
 
 function App() {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [audio] = useState(new Audio(deepSynth));
-  const [fade, setFade] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(0);
 
   useEffect(() => {
     audio.addEventListener("timeupdate", function () {
@@ -62,52 +61,38 @@ function App() {
         this.play();
       }
     });
-    audio.volume = 0.2;
+    audio.volume = 0;
   }, []);
 
   return (
     <MainDiv>
-			<Poem>
-				<div id="poem-centered">
-				</div>
-			</Poem>
-      {isPlaying ? (
-        <Canvas awareness={awareness} />
-      ) : (
-        <StartButton
-          onClick={() => {
-            setFade(true);
-            setTimeout(() => {
-              const fadeAudio = setInterval(() => {
-                if (audio.volume !== 4) {
-                  audio.volume += 0.02;
-                }
+      <Poem>
+        <div id="poem-centered"></div>
+      </Poem>
+      <Canvas
+        awareness={awareness}
+        onStart={() => {
+          audio.volume = 0;
+          audio.play();
 
-                if (audio.volume > 0.38) {
-                  clearInterval(fadeAudio);
-                }
-              }, 200);
-              setIsPlaying(true);
-            }, 2000);
-            audio.volume = 0;
-            audio.play();
-          }}
-          visible={!fade}
-        >
-					Solace
-        </StartButton>
-      )}
-
+          const fadeAudio = setInterval(() => {
+            audio.volume += 0.01;
+            if (audio.volume > 0.18) {
+              clearInterval(fadeAudio);
+            }
+          }, 400);
+        }}
+      />
       {/* Background ambience */}
 
       {/* Our Main song, dynamic interaction */}
-      <Song isPlaying={isPlaying} bpm={60}>
-        {/* <Track steps={["G3", null, null, "A3"]}>
+      {/* <Song isPlaying={isPlaying} bpm={60}> */}
+      {/* <Track steps={["G3", null, null, "A3"]}>
           <Instrument type="synth" />
           <Effect type="feedbackDelay" wet={0.3} />
         </Track> */}
 
-        {/* <Track steps={[{ name: "C3", duration: 30, velocity: 1 }]}>
+      {/* <Track steps={[{ name: "C3", duration: 30, velocity: 1 }]}>
           <Instrument
             type="sampler"
             samples={{
@@ -119,7 +104,7 @@ function App() {
             // }}
           ></Instrument>
         </Track> */}
-      </Song>
+      {/* </Song> */}
     </MainDiv>
   );
 }
@@ -128,7 +113,7 @@ export default App;
 
 const MainDiv = styled.div`
   background-color: black;
-  width: 100vw;
+  width: 100%;
   height: 100%;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -139,38 +124,17 @@ const MainDiv = styled.div`
   user-select: none;
 `;
 
-const StartButton = styled.button`
+const Poem = styled.div`
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  text-align: center;
-  font-size: 2rem;
-  color: #fff;
-  background-color: black;
-  border-radius: 5px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  z-index: 1;
-  font-family: "Crimson Text", serif;
-  opacity: ${(props) => (props.visible ? "1" : "0")};
-  transition: opacity 2s ease-in-out;
-`;
-
-const Poem = styled.div`
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: -2;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: white;
-	font-size: 32px;
+  z-index: -2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 32px;
   font-family: "Crimson Text", serif;
 `;
