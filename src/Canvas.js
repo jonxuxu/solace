@@ -12,6 +12,7 @@ function Canvas({ awareness, onStart }) {
 
   // Start screen
   let startFade = 0;
+  let phoneImg = null;
 
   let bigRipples = [];
   let smallRipples = [];
@@ -48,7 +49,6 @@ function Canvas({ awareness, onStart }) {
     }
 
     needsRotate = height > width;
-
     p5.resizeCanvas(width, height);
   }
 
@@ -197,6 +197,7 @@ function Canvas({ awareness, onStart }) {
     p5.ellipseMode(p5.RADIUS);
     p5.textFont("Crimson Text");
     p5.textAlign(p5.LEFT, p5.TOP);
+    phoneImg = p5.loadImage("./iphone2.png");
 
     awareness.on("change", ({ updated, removed }) => {
       if (updated) {
@@ -217,19 +218,22 @@ function Canvas({ awareness, onStart }) {
     });
 
     poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate);
+
+    needsRotate = height > width;
   }
 
   function draw(p5) {
     p5.background(0);
 
     if (needsRotate) {
-      p5.fill(255 - startFade);
-      p5.textSize(32);
-      // TODO: Fix hardcode?
+      p5.fill(255);
+      p5.image(phoneImg, p5.width / 2 - 80, p5.height / 2 - 100);
+      p5.textSize(20);
+      p5.textAlign(p5.CENTER);
       p5.text(
-        "REEEEEEEEEEEE ROTATE YOUR PHONE U TWAT",
-        p5.width / 2 - 30,
-        p5.height / 2 - 10
+        "Rotate your phone for the best experience",
+        p5.width / 2,
+        p5.height / 2 + 50
       );
       return;
     }
@@ -237,8 +241,8 @@ function Canvas({ awareness, onStart }) {
     if (gameState === "start") {
       p5.fill(255 - startFade);
       p5.textSize(32);
-      // TODO: Fix hardcode?
-      p5.text("Solace", p5.width / 2 - 30, p5.height / 2 - 10);
+      p5.textAlign(p5.CENTER);
+      p5.text("Solace", p5.width / 2, p5.height / 2);
     } else if (gameState === "play") {
       p5.scale(1 / canvasScale);
       p5.translate(-xTranslate, -yTranslate);
