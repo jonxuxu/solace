@@ -20,7 +20,6 @@ export default class Interpolator {
   }
 
   addPoint = (mouse) => {
-    // console.log(cursor);F
     clearTimeout(this.timeoutId);
     const now = performance.now();
     const duration = Math.min(now - this.timestamp, MAX_INTERVAL);
