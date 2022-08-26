@@ -37,7 +37,7 @@ export default class PoemEngine {
     return Math.sqrt(1 - (1 - t) * (1 - t)) * scale;
   };
 
-  setPoem(idx) => {
+  setPoem = (idx) => {
     const centered = document.getElementById("poem-centered");
 		centered.style.fontSize = `${32/this.canvasScale}px`;
     while (centered.firstChild) {
