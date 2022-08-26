@@ -1,17 +1,10 @@
-import { Spline } from "./Spline";
-import { Vec } from "@tldraw/vec";
 import React from "react";
 import Sketch from "react-p5";
 import "./App.css";
 
 import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
-
-// constant parameters to contPol animation
-
-const cursorAlpha = 100;
-const cursorRadius = 9;
-const MAX_INTERVAL = 300;
+import Interpolator from "./utils/interpolate";
 
 function Canvas({ awareness }) {
   let bigRipples = [];
@@ -32,7 +25,6 @@ function Canvas({ awareness }) {
   let yTranslate = 0;
 
   let poemEngine = null;
-
   let canAdvance = true;
 
   function mousePressed(p5) {
@@ -134,88 +126,18 @@ function Canvas({ awareness }) {
         cursors[clientID] = {};
         if (clientID !== myClientId) {
           cursors[clientID] = {
-            state: "idle",
-            queue: [],
-            timestamp: performance.now(),
-            timeoutId: null,
-            prevPoint: [0, 0],
-            spline: new Spline(),
-            currAnimation: null,
-            startAnimation: performance.now(),
+            interpolator: new Interpolator((point) => {
+              cursors[clientID].x = point[0];
+              cursors[clientID].y = point[1];
+            }),
           };
         }
       }
 
       if (clientID !== myClientId) {
-        addPoint(clientID, mouse);
+        cursors[clientID].interpolator.addPoint(mouse);
       }
       cursors[clientID].holdState = mouse.holdState;
-    }
-  }
-
-  function addPoint(clientID, mouse) {
-    const cursor = cursors[clientID];
-    // console.log(cursor);
-    clearTimeout(cursor.timeoutId);
-    const now = performance.now();
-    const duration = Math.min(now - cursor.timestamp, MAX_INTERVAL);
-    const point = [mouse.x, mouse.y];
-    if (!cursor.prevPoint) {
-      cursor.spline.clear();
-      cursor.prevPoint = point;
-      cursor.spline.addPoint(point);
-      cursor.x = point[0];
-      cursor.y = point[1];
-      cursor.state = "stopped";
-      cursors[clientID] = cursor;
-      return;
-    }
-    if (cursor.state === "stopped") {
-      if (Vec.dist(cursor.prevPoint, point) < 4) {
-        cursor.x = point[0];
-        cursor.y = point[1];
-        cursors[clientID] = cursor;
-        return;
-      }
-      cursor.spline.clear();
-      cursor.spline.addPoint(cursor.prevPoint);
-      cursor.spline.addPoint(cursor.prevPoint);
-      cursor.spline.addPoint(point);
-      cursor.state = "idle";
-    } else {
-      cursor.spline.addPoint(point);
-    }
-    if (duration < 16) {
-      cursor.prevPoint = point;
-      cursor.timestamp = now;
-      cursor.x = point[0];
-      cursor.y = point[1];
-      cursors[clientID] = cursor;
-      return;
-    }
-    const animation = {
-      start: cursor.spline.points.length - 3,
-      from: cursor.prevPoint,
-      to: point,
-      duration,
-    };
-    cursor.prevPoint = point;
-    cursor.timestamp = now;
-
-    switch (cursor.state) {
-      case "idle": {
-        cursor.state = "animating";
-        cursor.currAnimation = animation;
-        cursor.startAnimation = performance.now();
-        cursors[clientID] = cursor;
-        drawSpline(clientID);
-        break;
-      }
-      case "animating": {
-        cursor.queue.push(animation);
-        cursors[clientID] = cursor;
-        break;
-      }
     }
   }
 
@@ -276,27 +198,7 @@ function Canvas({ awareness }) {
     p5.noStroke();
     cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
     cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
-    for (const [key, cursor] of Object.entries(cursors)) {
-      // Calculate color and size from charge state
-      let color = p5.color(
-        255,
-        cursorAlpha + ((255 - cursorAlpha) * cursor.holdState) / 100
-      );
-      let radius = cursorRadius + (cursorRadius * cursor.holdState) / 100;
-      p5.fill(color);
-
-      // Calculate x,y from spline. Adapted animateNext to be called on each render frame instead on every cursor update
-
-      if (key != myClientId) {
-        // if (p5.frameCount % 10 === 0) {
-        drawSpline(key);
-        // }
-      } else {
-        cursors[key].x = p5.mouseX * canvasScale + xTranslate;
-        cursors[key].y = p5.mouseY * canvasScale + yTranslate;
-      }
-      p5.ellipse(cursor.x, cursor.y, radius);
-    }
+    DrawFns.drawCursors(p5, cursors, myClientId);
 
     p5.fill(0, 0); // fully transparent
     bigRipples = DrawFns.drawBigRipples(p5, bigRipples);
@@ -305,48 +207,6 @@ function Canvas({ awareness }) {
     p5.fill(255);
     p5.noStroke();
     DrawFns.drawBurst(p5, bursts);
-  }
-
-  function drawSpline(key) {
-    if (cursors[key].state == "animating") {
-      const t =
-        (performance.now() - cursors[key].startAnimation) /
-        cursors[key].currAnimation.duration;
-
-      if (t <= 1) {
-        if (cursors[key].spline.points.length > 0) {
-          try {
-            // console.log(t + cursors[key].currAnimation.start);
-            const point = cursors[key].spline.getSplinePoint(
-              t + cursors[key].currAnimation.start
-            );
-            console.log("SETTING POINT");
-            cursors[key].x = point[0];
-            cursors[key].y = point[1];
-          } catch (e) {
-            console.warn(e);
-          }
-          return;
-        }
-      }
-      const next = cursors[key].queue.shift();
-      if (next) {
-        cursors[key].state = "animating";
-        cursors[key].currAnimation = next;
-        cursors[key].startAnimation = performance.now();
-      } else {
-        cursors[key].state = "idle";
-        /*
-        const point =
-          cursors[key].spline.points[1 + cursors[key].currAnimation.start];
-        cursors[key].x = point[0];
-        cursors[key].y = point[1];
-        */
-        cursors[key].timeoutId = setTimeout(() => {
-          cursors[key].state = "stopped";
-        }, MAX_INTERVAL);
-      }
-    }
   }
 
   return (

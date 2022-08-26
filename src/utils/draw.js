@@ -1,13 +1,15 @@
-const cursorAlpha = 100;
 const bigRippleSpeed = 50;
 const smallRippleSpeed = 20;
-const cursorRadius = 9;
 const bigRippleMaxTime = 3;
 const bigRippleWidth = 4;
 const smallRippleMaxTime = 3;
 const smallRippleWidth = 2.5;
+
 const burstTime1 = 1;
 const burstTime2 = 3;
+
+const cursorAlpha = 100;
+const cursorRadius = 9;
 
 function drawBigRipple(p5, ripple, time) {
   p5.strokeWeight(bigRippleWidth);
@@ -95,4 +97,23 @@ function drawBurst(p5, bursts) {
   });
 }
 
-export default { drawBigRipples, drawSmallRipples, drawBurst };
+function drawCursors(p5, cursors, myClientId) {
+  for (const [key, cursor] of Object.entries(cursors)) {
+    // Calculate color and size from charge state
+    let color = p5.color(
+      255,
+      cursorAlpha + ((255 - cursorAlpha) * cursor.holdState) / 100
+    );
+    let radius = cursorRadius + (cursorRadius * cursor.holdState) / 100;
+    p5.fill(color);
+
+    // Calculate x,y from spline. Adapted animateNext to be called on each render frame instead on every cursor update
+    if (key != myClientId) {
+      cursor.interpolator.drawSpline();
+    }
+
+    p5.ellipse(cursor.x, cursor.y, radius);
+  }
+}
+
+export default { drawBigRipples, drawSmallRipples, drawBurst, drawCursors };
