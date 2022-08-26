@@ -6,11 +6,6 @@ import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
 
-// constant parameters to contPol animation
-
-const cursorAlpha = 100;
-const cursorRadius = 9;
-
 function Canvas({ awareness }) {
   let bigRipples = [];
   let smallRipples = [];
@@ -203,24 +198,7 @@ function Canvas({ awareness }) {
     p5.noStroke();
     cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
     cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
-    for (const [key, cursor] of Object.entries(cursors)) {
-      // Calculate color and size from charge state
-      let color = p5.color(
-        255,
-        cursorAlpha + ((255 - cursorAlpha) * cursor.holdState) / 100
-      );
-      let radius = cursorRadius + (cursorRadius * cursor.holdState) / 100;
-      p5.fill(color);
-
-      // Calculate x,y from spline. Adapted animateNext to be called on each render frame instead on every cursor update
-      if (key != myClientId) {
-        cursor.interpolator.drawSpline();
-      } else {
-        cursors[key].x = p5.mouseX * canvasScale + xTranslate;
-        cursors[key].y = p5.mouseY * canvasScale + yTranslate;
-      }
-      p5.ellipse(cursor.x, cursor.y, radius);
-    }
+    DrawFns.drawCursors(p5, cursors, myClientId);
 
     p5.fill(0, 0); // fully transparent
     bigRipples = DrawFns.drawBigRipples(p5, bigRipples);
