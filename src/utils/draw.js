@@ -66,6 +66,10 @@ function burstScale2(t) {
   //return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+function fontSize(p5, scale) {
+	return p5.map(scale, 0, 1, 32, 64);
+}
+
 function drawLetter(p5, letterInfo, burst, time) {
   const now = Date.now();
   const { letter, scale, v1X, v1Y, v2X, v2Y, endTime } = letterInfo;
