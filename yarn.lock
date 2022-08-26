@@ -1828,7 +1828,7 @@
   dependencies:
     "@babel/runtime" "^7.12.5"
 
-"@tldraw/vec@^1.4.3":
+"@tldraw/vec@^1.7.1":
   version "1.7.1"
   resolved "https://registry.yarnpkg.com/@tldraw/vec/-/vec-1.7.1.tgz#5bfac9a56e11ad890cbd1c620293d7fcb23bf1ea"
   integrity sha512-qM6Z9RvkLFFEzr91mmsA4HI14msyDgDDOu36csIzG5BYu2bFmEz5siQ8WntHgDtUjzJHP+VSSOTbAXhklEZHLA==
@@ -6751,13 +6751,6 @@ path-type@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
-
-perfect-cursors@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/perfect-cursors/-/perfect-cursors-1.0.5.tgz#79b8c04790172bac833a0767a83f376d7e59ca86"
-  integrity sha512-LgQJj6QtF6VzYODurlhF9Ayt2liiadJZBocK98brcCC6D/dRtZlSU/r0mXWDoCdGPiO24oJB1+PZKz4p9hblWg==
-  dependencies:
-    "@tldraw/vec" "^1.4.3"
 
 performance-now@^2.1.0:
   version "2.1.0"
