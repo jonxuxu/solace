@@ -19,14 +19,51 @@ function getOffset(el) {
 export default class PoemEngine {
   burstTime1 = 1;
   burstTime2 = 3;
+  canAdvance = false;
   advanceTimer = null;
-  currentPoem = -1;
-  currentLine = -1;
   canvasScale = 1;
   xTranslate = 0;
   yTranslate = 0;
+  yMap = null;
 
-  constructor(cs, xt, yt) {
+  constructor(cs, xt, yt, ym, p5) {
+    this.canvasScale = cs;
+    this.xTranslate = xt;
+    this.yTranslate = yt;
+    this.yMap = ym;
+    this.advanceTimer = setTimeout(() => {
+      this.canAdvance = true;
+      console.log("can advance now");
+    }, 5000);
+
+    // Draw all the earlier lines
+    this.setPoem(ym.get("currentPoem"));
+    this.drawPrevLines(p5);
+
+    ym.observe((yMapEvent) => {
+      if (yMapEvent.keysChanged.has("currentPoem")) {
+        this.poemUpdated();
+      }
+      if (yMapEvent.keysChanged.has("currentLine")) {
+        this.lineUpdated();
+      }
+    });
+  }
+
+  lineUpdated() {
+    // must wait a few seconds before getting the next line
+    this.canAdvance = false;
+    this.advanceTimer = setTimeout(() => {
+      this.canAdvance = true;
+      console.log("can advance now");
+    }, 5000);
+  }
+
+  poemUpdated() {
+    // TODO
+  }
+
+  resizeCanvas(cs, xt, yt) {
     this.canvasScale = cs;
     this.xTranslate = xt;
     this.yTranslate = yt;
@@ -39,7 +76,7 @@ export default class PoemEngine {
 
   setPoem = (idx) => {
     const centered = document.getElementById("poem-centered");
-		centered.style.fontSize = `${32/this.canvasScale}px`;
+    centered.style.fontSize = `${32 / this.canvasScale}px`;
     while (centered.firstChild) {
       centered.removeChild(centered.firstChild);
     }
@@ -63,17 +100,13 @@ export default class PoemEngine {
   };
 
   newBurst = (burst) => {
-    if (this.currentPoem !== burst.poem || this.currentLine !== burst.line) {
-      clearInterval(this.advanceTimer);
-    }
-    if (this.currentPoem !== burst.poem) {
-      this.setPoem(burst.poem);
-    }
-    this.currentPoem = burst.poem;
-    this.currentLine = burst.line;
     const lineDiv =
-      document.getElementById("poem-centered").children[burst.line];
-    let letters = poems[burst.poem].verses[burst.line]
+      document.getElementById("poem-centered").children[
+        this.yMap.get("currentLine")
+      ];
+    let letters = poems[this.yMap.get("currentPoem")].verses[
+      this.yMap.get("currentLine")
+    ]
       .split("")
       .map((letter, index) => {
         const letterDiv = lineDiv.children[index];
@@ -110,22 +143,40 @@ export default class PoemEngine {
   };
 
   advanceLine = () => {
-    if (this.currentPoem === -1) {
-      this.currentPoem = 0;
-      this.currentLine = 0;
-      this.setPoem(this.currentPoem);
-    } else if (this.currentLine < poems[this.currentPoem].verses.length - 1) {
-      this.currentLine++;
-    } else {
-      this.currentLine = 0;
-      this.currentPoem = (this.currentPoem + 1) % poems.length;
-      // TODO: current poem should fade away
-      this.setPoem(this.currentPoem);
+    const currentPoem = this.yMap.get("currentPoem");
+    const currentLine = this.yMap.get("currentLine");
+    // set default poem if not defined in shared map
+    if (currentLine === undefined) {
+      this.yMap.set("currentLine", 0);
     }
-    // must wait a few seconds before getting the next line
-    this.canAdvance = false;
-    this.advanceTimer = setInterval(() => {
-      this.canAdvance = true;
-    }, 5000);
+    if (currentPoem === undefined) {
+      this.yMap.set("currentPoem", 0);
+    } else if (currentLine < poems[currentPoem].verses.length - 1) {
+      this.yMap.set("currentLine", currentLine + 1);
+    } else {
+      this.yMap.set("currentLine", 0);
+      this.yMap.set("currentPoem", (currentPoem + 1) % poems.length);
+      // TODO: current poem should fade away
+      this.yMap.set("currentPoem", currentPoem);
+    }
+  };
+
+  drawPrevLines = (p5) => {
+    console.log("drawing prev lines");
+    const currentPoem = this.yMap.get("currentPoem");
+    const currentLine = this.yMap.get("currentLine");
+    const poemDiv = document.getElementById("poem-centered");
+    for (let i = 0; i < currentLine; i++) {
+      const { top, left } = getOffset(poemDiv.children[i].children[0]);
+      const x = left * this.canvasScale + this.xTranslate;
+      const y = top * this.canvasScale + this.yTranslate;
+      console.log(i, x, y);
+      p5.push();
+      p5.fill(255);
+      p5.noStroke();
+      p5.textSize(32);
+      p5.text("This is a line", x, y);
+      p5.pop();
+    }
   };
 }

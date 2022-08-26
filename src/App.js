@@ -70,6 +70,7 @@ function App() {
         <div id="poem-centered"></div>
       </Poem>
       <Canvas
+        yMap={doc.getMap("gameDoc")}
         awareness={awareness}
         onStart={() => {
           audio.volume = 0;

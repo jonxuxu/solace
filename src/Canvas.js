@@ -6,7 +6,7 @@ import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
 
-function Canvas({ awareness, onStart }) {
+function Canvas({ yMap, awareness, onStart }) {
   let gameState = "start";
   let needsRotate = false;
 
@@ -32,10 +32,9 @@ function Canvas({ awareness, onStart }) {
   let yTranslate = 0;
 
   let poemEngine = null;
-  let canAdvance = true;
 
   // Adjust canvas scale and translate based on screen size
-  function windowResized(p5) {
+  function resizeWindow(p5) {
     const width = p5.windowWidth;
     const height = p5.windowHeight;
 
@@ -50,6 +49,7 @@ function Canvas({ awareness, onStart }) {
 
     needsRotate = height > width;
     p5.resizeCanvas(width, height);
+    poemEngine.resizeCanvas(canvasScale, xTranslate, yTranslate);
   }
 
   function mousePressed(p5) {
@@ -94,9 +94,8 @@ function Canvas({ awareness, onStart }) {
           },
         });
       } else {
-        if (canAdvance) {
-          poemEngine.advanceLine();
-        }
+        // Pop a burst of poem line
+        poemEngine.advanceLine(yMap);
         clearInterval(holdTimer);
         holdState = 0;
         awareness.setLocalStateField("canvasInfo", {
@@ -108,8 +107,6 @@ function Canvas({ awareness, onStart }) {
           burst: {
             x: p5.mouseX * canvasScale + xTranslate,
             y: p5.mouseY * canvasScale + yTranslate,
-            poem: poemEngine.currentPoem,
-            line: poemEngine.currentLine,
             timestamp: Date.now(), // only used to ensure uniqueness
           },
           mouse: {
@@ -196,8 +193,11 @@ function Canvas({ awareness, onStart }) {
     p5.createCanvas(width, height).parent(canvasParentRef);
     p5.ellipseMode(p5.RADIUS);
     p5.textFont("Crimson Text");
-    p5.textAlign(p5.LEFT, p5.TOP);
     phoneImg = p5.loadImage("./iphone2.png");
+
+    poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap, p5);
+    resizeWindow(p5);
+    needsRotate = height > width;
 
     awareness.on("change", ({ updated, removed }) => {
       if (updated) {
@@ -216,10 +216,6 @@ function Canvas({ awareness, onStart }) {
         }
       }
     });
-
-    poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate);
-
-    needsRotate = height > width;
   }
 
   function draw(p5) {
@@ -247,15 +243,18 @@ function Canvas({ awareness, onStart }) {
       p5.scale(1 / canvasScale);
       p5.translate(-xTranslate, -yTranslate);
 
+      // Draw cursors
       p5.noStroke();
       cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
       cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
       DrawFns.drawCursors(p5, cursors, myClientId);
 
+      // Draw ripples
       p5.fill(0, 0); // fully transparent
       bigRipples = DrawFns.drawBigRipples(p5, bigRipples);
       smallRipples = DrawFns.drawSmallRipples(p5, smallRipples);
 
+      // Draw bursts
       p5.fill(255);
       p5.noStroke();
       DrawFns.drawBurst(p5, bursts);
@@ -270,7 +269,7 @@ function Canvas({ awareness, onStart }) {
       mouseReleased={mouseReleased}
       mouseMoved={mouseMoved}
       className="Canvas"
-      windowResized={windowResized}
+      windowResized={resizeWindow}
     />
   );
 }

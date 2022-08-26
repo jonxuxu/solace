@@ -69,7 +69,7 @@ function burstScale2(t) {
 }
 
 function fontSize(p5, scale) {
-	return p5.map(scale, 0, 1, 32, 64);
+  return p5.map(scale, 0, 1, 32, 64);
 }
 
 function drawLetter(p5, letterInfo, burst, time) {
@@ -88,6 +88,7 @@ function drawLetter(p5, letterInfo, burst, time) {
 }
 
 function drawBurst(p5, bursts) {
+  p5.textAlign(p5.LEFT, p5.TOP);
   const now = Date.now();
   bursts.forEach((burst) => {
     const time = (now - burst.startTime) / 1000;
