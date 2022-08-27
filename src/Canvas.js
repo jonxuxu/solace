@@ -200,7 +200,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 				burst.letters = poemEngine.newBurst(burst);
 				bursts.push(burst);
 				console.log("note 1");
-				awareness.setLocalStateField("canvasInfo", { note: true });
+				awareness.setLocalStateField("note", {
+					timestamp: Date.now(),
+				});
 			}
 		}
   }

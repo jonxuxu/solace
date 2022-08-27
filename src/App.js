@@ -30,19 +30,31 @@ const awareness = wsProvider.awareness;
 awareness.on("change", ({ updated }) => {
   if (updated) {
     const states = awareness.getStates();
+		if (states.length > 0) {
+			const state = states[0];
+			const { note, gong } = state;
+			if (note) {
+				console.log("actually playing note", note, note.timestamp);
+				playNote();
+			}
+			if (gong) {
+				playGong();
+			}
+		}
+		/*
     updated.forEach((key) => {
       // key is the clientID
       const state = states.get(key); // state is updated awareness state
-      const { canvasInfo } = state;
-			if (canvasInfo) {
-				if (canvasInfo.note) {
-					playNote();
-				}
-				if (canvasInfo.gong) {
-					playGong();
-				}
+      const { note, gong } = state;
+			if (note) {
+				console.log("actually playing note", note, note.timestamp);
+				playNote();
+			}
+			if (gong) {
+				playGong();
 			}
     });
+		*/
   }
 });
 
