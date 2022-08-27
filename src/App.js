@@ -45,6 +45,7 @@ awareness.on("change", ({ updated }) => {
     updated.forEach((key) => {
       // key is the clientID
       const state = states.get(key); // state is updated awareness state
+<<<<<<< HEAD
       const { note, gong } = state;
 			if (note) {
 				console.log("actually playing note", note, note.timestamp);
@@ -53,6 +54,17 @@ awareness.on("change", ({ updated }) => {
 			if (gong) {
 				playGong();
 			}
+=======
+      const { canvasInfo } = state;
+      if (canvasInfo) {
+        if (canvasInfo.note) {
+          playNote();
+        }
+        if (canvasInfo.gong) {
+          playGong();
+        }
+      }
+>>>>>>> 189c2c69a2dcf740538df5efc40903b490d7dd7b
     });
 		*/
   }
@@ -60,12 +72,14 @@ awareness.on("change", ({ updated }) => {
 
 function playNote() {
   const audio = new Audio(notes[Math.floor(Math.random() * notes.length)]);
+  audio.volume(1);
   audio.play();
 }
 
 function playGong() {
-	const audio = new Audio(gong);
-	audio.play();
+  const audio = new Audio(gong);
+  audio.volume(0.5);
+  audio.play();
 }
 
 function App() {
