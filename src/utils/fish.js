@@ -1,7 +1,7 @@
 class FlockParams {
   constructor() {
     this.maxForce = 0.08;
-    this.maxSpeed = 3.7;
+    this.maxSpeed = 3;
     this.perceptionRadius = 100;
     this.alignAmp = 1;
     this.cohesionAmp = 1;
@@ -129,7 +129,7 @@ class Koi {
     alignment.mult(flockParams.alignAmp);
     cohesion.mult(flockParams.cohesionAmp);
     separation.mult(flockParams.separationAmp);
-    this.acceleration.add(avoid);
+    this.acceleration.add(avoid * 2);
     this.acceleration.add(separation);
     this.acceleration.add(alignment);
     this.acceleration.add(cohesion);
