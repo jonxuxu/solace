@@ -48,7 +48,6 @@ export default class PoemEngine {
   }
 
   ready() {
-    console.log("ready", this.yMap.get("currentLine"));
     // Init shared values if not already set
     if (this.yMap.get("currentLine") === undefined) {
       this.yMap.set("currentLine", -1);
@@ -85,13 +84,11 @@ export default class PoemEngine {
   };
 
   setPoem = (idx) => {
-    console.log("setPoem", idx);
     const centered = document.getElementById("poem-centered");
     centered.style.fontSize = `${32 / this.canvasScale}px`;
     while (centered.firstChild) {
       centered.removeChild(centered.firstChild);
     }
-    console.log(idx);
     const verses = poems[idx].verses;
     for (let i = 0; i < verses.length; i++) {
       const verse = verses[i];
@@ -158,7 +155,6 @@ export default class PoemEngine {
   advanceLine = () => {
     const currentPoem = this.yMap.get("currentPoem");
     const currentLine = this.yMap.get("currentLine");
-    console.log("advancing from " + currentLine + " to " + (currentLine + 1));
     // set default poem if not defined in shared map
     if (currentLine < poems[currentPoem].verses.length - 1) {
       this.yMap.set("currentLine", currentLine + 1);

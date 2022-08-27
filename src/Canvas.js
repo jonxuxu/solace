@@ -37,10 +37,8 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 
   useEffect(() => {
     wsProvider.on("status", (event) => {
-      console.log(event.status); // logs "connected" or "disconnected"
       if (event.status === "connected") {
         prevLines = yMap.get("currentLine");
-        console.log("init", prevLines);
         poemEngine.ready();
       }
     });
@@ -171,7 +169,6 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       );
     }
     if (burst) {
-      console.log("burst", burst);
       const letters = poemEngine.newBurst(burst);
       bursts.push({
         ...burst,
@@ -206,7 +203,6 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function setup(p5, canvasParentRef) {
-    console.log("setup called");
     let width = canvasParentRef.offsetWidth;
     let height = canvasParentRef.offsetHeight;
     p5.createCanvas(width, height).parent(canvasParentRef);
