@@ -43,34 +43,34 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 	let fadingPoem = null;
 
   useEffect(() => {
-    wsProvider.on("status", (event) => {
-      if (event.status === "connected") {
-				const current = poemEngine.ready();
-				prevPoem = current.poem;
-				prevLines = current.line;
-				console.log(prevPoem, prevLines);
-      }
-    });
+		wsProvider.on('synced', () => {
+			console.log('synced');
+			const current = poemEngine.ready();
+			prevPoem = current.poem;
+			prevLines = current.line;
+			console.log(prevPoem, prevLines);
 
-    yMap.observe((yMapEvent) => {
-      if (yMapEvent.keysChanged.has("currentPoem")) {
-        // New poem, clear bursts and prev lines
-        const decreaseInterval = setInterval(() => {
-          if (burstOpacity > 5) {
-            burstOpacity -= 5;
-          } else {
-            clearInterval(decreaseInterval);
-            showFirstLines = false;
-            burstOpacity = 255;
-            bursts = [];
-						poemEngine.setPoem(yMap.get("currentPoem"));
-          }
-        }, [50]);
-      }
-      if (yMapEvent.keysChanged.has("currentLine")) {
-        poemEngine.lineUpdated();
-      }
-    });
+			yMap.observe((yMapEvent) => {
+				if (yMapEvent.keysChanged.has("currentPoem")) {
+					console.log('poem changed');
+					// New poem, clear bursts and prev lines
+					const decreaseInterval = setInterval(() => {
+						if (burstOpacity > 5) {
+							burstOpacity -= 5;
+						} else {
+							clearInterval(decreaseInterval);
+							showFirstLines = false;
+							burstOpacity = 255;
+							bursts = [];
+							poemEngine.setPoem(yMap.get("currentPoem"));
+						}
+					}, [50]);
+				}
+				if (yMapEvent.keysChanged.has("currentLine")) {
+					poemEngine.lineUpdated();
+				}
+			});
+		})
   }, []);
 
   // Adjust canvas scale and translate based on screen size

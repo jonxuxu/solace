@@ -1,6 +1,6 @@
 import poems from ".././poems.json";
 
-const LINE_TIMEOUT = 9000;
+const LINE_TIMEOUT = 5000;
 
 function getOffset(el) {
   var body, _x, _y;
@@ -40,6 +40,7 @@ export default class PoemEngine {
 		let line = this.yMap.get("currentLine");
     // Init shared values if not already set
     if (poem === undefined) {
+			console.log("currentPoem is undefined, setting to 0");
       this.yMap.set("currentPoem", 0);
 			poem = 0;
     }
