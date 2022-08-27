@@ -53,17 +53,14 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 
   useEffect(() => {
     wsProvider.on("synced", () => {
-      console.log("synced");
       const current = poemEngine.ready();
       prevPoem = current.poem;
       prevLines = current.line;
-      console.log(prevPoem, prevLines);
 
       yMap.observe((yMapEvent) => {
         if (yMapEvent.keysChanged.has("currentPoem")) {
-          console.log("poem changed");
 					poemFading = true;
-					this.awareness.setLocalStateField("canvasInfo", { gong: true });
+					awareness.setLocalStateField("canvasInfo", { gong: true });
           // New poem, clear bursts and prev lines
           const decreaseInterval = setInterval(() => {
             if (burstOpacity > 5) {
@@ -201,8 +198,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 					clientID,
 				};
 				burst.letters = poemEngine.newBurst(burst);
-				console.log(`Adding burst poem ${burst.poem}, line ${line}`);
 				bursts.push(burst);
+				console.log("note 1");
+				awareness.setLocalStateField("canvasInfo", { note: true });
 			}
 		}
   }
@@ -222,8 +220,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 			};
 			if (burst.line > -1) {
 				burst.letters = poemEngine.newBurst(burst);
-				console.log(`Adding burst poem ${burst.poem}, line ${burst.line}`);
 				bursts.push(burst);
+				console.log("note 2");
+				awareness.setLocalStateField("canvasInfo", { note: true });
 			}
 		}
   }
@@ -253,7 +252,6 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function draw(p5) {
-		//console.log(poemFading);
     p5.background(0);
 
     if (needsRotate) {

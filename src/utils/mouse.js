@@ -132,7 +132,6 @@ export default class MouseTracker {
         this.selfHoldStart(p5, this.myClientID, mouseInfo);
       }
       this.awareness.setLocalStateField("mouse", mouseInfo);
-			this.awareness.setLocalStateField("canvasInfo", { note: true });
     }, CLICK_TIME);
   };
 
