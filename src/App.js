@@ -27,58 +27,15 @@ const wsProvider = new WebsocketProvider(
 
 const awareness = wsProvider.awareness;
 
-awareness.on("change", ({ updated }) => {
-  if (updated) {
-    const states = awareness.getStates();
-		if (states.length > 0) {
-			const state = states[0];
-			const { note, gong } = state;
-			if (note) {
-				console.log("actually playing note", note, note.timestamp);
-				playNote();
-			}
-			if (gong) {
-				playGong();
-			}
-		}
-		/*
-    updated.forEach((key) => {
-      // key is the clientID
-      const state = states.get(key); // state is updated awareness state
-<<<<<<< HEAD
-      const { note, gong } = state;
-			if (note) {
-				console.log("actually playing note", note, note.timestamp);
-				playNote();
-			}
-			if (gong) {
-				playGong();
-			}
-=======
-      const { canvasInfo } = state;
-      if (canvasInfo) {
-        if (canvasInfo.note) {
-          playNote();
-        }
-        if (canvasInfo.gong) {
-          playGong();
-        }
-      }
->>>>>>> 189c2c69a2dcf740538df5efc40903b490d7dd7b
-    });
-		*/
-  }
-});
-
 function playNote() {
   const audio = new Audio(notes[Math.floor(Math.random() * notes.length)]);
-  audio.volume(1);
+  audio.volume = 1;
   audio.play();
 }
 
 function playGong() {
   const audio = new Audio(gong);
-  audio.volume(0.5);
+  audio.volume = 0.5;
   audio.play();
 }
 
@@ -94,6 +51,14 @@ function App() {
       }
     });
     audio.volume = 0;
+
+    doc.getMap("gameDoc").observe((yMapEvent) => {
+      if (yMapEvent.keysChanged.has("note")) {
+        playNote();
+      } else if (yMapEvent.keysChanged.has("gong")) {
+        playGong();
+      }
+    });
   }, []);
 
   return (

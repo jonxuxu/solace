@@ -59,8 +59,8 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 
       yMap.observe((yMapEvent) => {
         if (yMapEvent.keysChanged.has("currentPoem")) {
-					poemFading = true;
-					awareness.setLocalStateField("canvasInfo", { gong: true });
+          poemFading = true;
+          yMap.set("gong", Date.now());
           // New poem, clear bursts and prev lines
           const decreaseInterval = setInterval(() => {
             if (burstOpacity > 5) {
@@ -71,8 +71,8 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
               burstOpacity = 255;
               bursts = [];
               poemEngine.setPoem(yMap.get("currentPoem"));
-							poemFading = false;
-							prevLines = 0;
+              poemFading = false;
+              prevLines = 0;
             }
           }, [50]);
         }
@@ -113,12 +113,12 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function bigRippleOnClick(p5, clientID, mouseInfo) {
-		const { x, y } = mouseInfo;
+    const { x, y } = mouseInfo;
     const now = Date.now();
     bigRipples.push({ x, y, clientID, startTime: now });
     bigRipples.push({ x, y, clientID, startTime: now + 100 });
     bigRipples.push({ x, y, clientID, startTime: now + 200 });
-	}
+  }
 
   function selfClick(p5, _, mouseInfo) {
     if (gameState === "start") {
@@ -141,7 +141,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function selfHoldStart(p5, clientID, mouseInfo) {
-		cursors[clientID].chargingBurst = true;
+    cursors[clientID].chargingBurst = true;
     cursors[clientID].holdStart = Date.now();
     holdTimer = setTimeout(() => {
       mouseTracker.onBurst(p5);
@@ -152,15 +152,15 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
     if (!cursors[clientID]) {
       cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
     }
-		cursors[clientID].chargingBurst = true;
+    cursors[clientID].chargingBurst = true;
     cursors[clientID].holdStart = Date.now();
   }
 
   function holdEnd(p5, clientID, mouseInfo) {
-		if (cursors[clientID] === undefined) {
-			console.warn("cursors[clientID] is undefined, clientID:", clientID);
-		}
-		cursors[clientID].chargingBurst = false;
+    if (cursors[clientID] === undefined) {
+      console.warn("cursors[clientID] is undefined, clientID:", clientID);
+    }
+    cursors[clientID].chargingBurst = false;
     if (!cursors[clientID]) {
       cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
     }
@@ -180,53 +180,49 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function selfBurst(p5, clientID, mouseInfo) {
-		cursors[clientID].chargingBurst = false;
-		if (poemFading) {
-			bigRippleOnClick(p5, clientID, mouseInfo);
-		} else {
-			poemEngine.tryAdvanceLine(yMap);
-			const line = yMap.get("currentLine");
-			if (line === -1) {
-				bigRippleOnClick(p5, clientID, mouseInfo);
-			} else {
-				const burst = {
-					x: mouseInfo.x,
-					y: mouseInfo.y,
-					poem: yMap.get("currentPoem"),
-					line: line,
-					startTime: Date.now(),
-					clientID,
-				};
-				burst.letters = poemEngine.newBurst(burst);
-				bursts.push(burst);
-				console.log("note 1");
-				awareness.setLocalStateField("note", {
-					timestamp: Date.now(),
-				});
-			}
-		}
+    cursors[clientID].chargingBurst = false;
+    if (poemFading) {
+      bigRippleOnClick(p5, clientID, mouseInfo);
+    } else {
+      poemEngine.tryAdvanceLine(yMap);
+      const line = yMap.get("currentLine");
+      if (line === -1) {
+        bigRippleOnClick(p5, clientID, mouseInfo);
+      } else {
+        const burst = {
+          x: mouseInfo.x,
+          y: mouseInfo.y,
+          poem: yMap.get("currentPoem"),
+          line: line,
+          startTime: Date.now(),
+          clientID,
+        };
+        burst.letters = poemEngine.newBurst(burst);
+        bursts.push(burst);
+        console.log("note 1");
+        yMap.set("note", Date.now());
+      }
+    }
   }
 
   function otherBurst(p5, clientID, mouseInfo) {
-		cursors[clientID].chargingBurst = false;
-		if (poemFading) {
-			bigRippleOnClick(p5, clientID, mouseInfo);
-		} else {
-			const burst = {
-				x: mouseInfo.x,
-				y: mouseInfo.y,
-				poem: yMap.get("currentPoem"),
-				line: yMap.get("currentLine"),
-				startTime: Date.now(),
-				clientID,
-			};
-			if (burst.line > -1) {
-				burst.letters = poemEngine.newBurst(burst);
-				bursts.push(burst);
-				console.log("note 2");
-				awareness.setLocalStateField("canvasInfo", { note: true });
-			}
-		}
+    cursors[clientID].chargingBurst = false;
+    if (poemFading) {
+      bigRippleOnClick(p5, clientID, mouseInfo);
+    } else {
+      const burst = {
+        x: mouseInfo.x,
+        y: mouseInfo.y,
+        poem: yMap.get("currentPoem"),
+        line: yMap.get("currentLine"),
+        startTime: Date.now(),
+        clientID,
+      };
+      if (burst.line > -1) {
+        burst.letters = poemEngine.newBurst(burst);
+        bursts.push(burst);
+      }
+    }
   }
 
   function setup(p5, canvasParentRef) {
@@ -297,7 +293,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       p5.noStroke();
       DrawFns.drawBursts(p5, bursts, prevLines);
       if (showFirstLines) {
-				/*
+        /*
         let c = p5.color(255, 204, 0, burstOpacity);
         p5.fill(c);
 				*/
