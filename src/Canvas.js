@@ -44,12 +44,10 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   useEffect(() => {
     wsProvider.on("status", (event) => {
       if (event.status === "connected") {
-        prevLines = yMap.get("currentLine");
-        prevPoem = yMap.get("currentPoem");
-				console.log(prevLines, prevPoem);
-        poemEngine.ready();
-				prevLines = -1;
-				prevPoem = 0;
+				const current = poemEngine.ready();
+				prevPoem = current.poem;
+				prevLines = current.line;
+				console.log(prevPoem, prevLines);
       }
     });
 

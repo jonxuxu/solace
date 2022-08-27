@@ -39,16 +39,21 @@ export default class PoemEngine {
   }
 
   ready() {
+		let poem = this.yMap.get("currentPoem");
+		let line = this.yMap.get("currentLine");
     // Init shared values if not already set
-    if (this.yMap.get("currentLine") === undefined) {
-      this.yMap.set("currentLine", -1);
-    }
-    if (this.yMap.get("currentPoem") === undefined) {
+    if (poem === undefined) {
       this.yMap.set("currentPoem", 0);
+			poem = 0;
     }
+		if (line === undefined) {
+			this.yMap.set("currentLine", -1);
+			line = -1;
+		}
 
     // Draw all the earlier lines
-    this.setPoem(this.yMap.get("currentPoem"));
+    this.setPoem(poem);
+		return { line, poem };
   }
 
   lineUpdated() {
