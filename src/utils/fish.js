@@ -1,11 +1,13 @@
+const KOI_NUMBER = 25;
+
 class FlockParams {
   constructor() {
     this.maxForce = 0.08;
-    this.maxSpeed = 3;
+    this.maxSpeed = 3.7;
     this.perceptionRadius = 100;
     this.alignAmp = 1;
     this.cohesionAmp = 1;
-    this.separationAmp = 1.5;
+    this.separationAmp = 1;
   }
 }
 
@@ -29,7 +31,7 @@ class Koi {
     // console.log(this.velocity, this.acceleration);
     this.maxForce = flockParams.maxForce;
     this.maxSpeed = flockParams.maxSpeed;
-    this.baseSize = p5.int(p5.random(5, 10));
+    this.baseSize = p5.int(p5.random(8, 10));
     this.bodyLength = this.baseSize * 2;
     this.body = new Array(this.bodyLength).fill({ ...this.position });
     this.p5Ref = p5;
@@ -147,25 +149,11 @@ class Koi {
       if (index < this.bodyLength / 6) {
         size = this.baseSize + index * 1.8;
       } else {
-        size = this.baseSize * 2 - index;
+        size = this.baseSize * 1.8 - index;
       }
       this.color.setAlpha(this.bodyLength - index);
       this.p5Ref.fill(this.color);
       this.p5Ref.ellipse(b.x, b.y, size, size);
-    });
-  }
-
-  showShadow() {
-    this.body.forEach((b, index) => {
-      let size;
-      if (index < this.bodyLength / 6) {
-        size = this.baseSize + index * 1.8;
-      } else {
-        // fill(255, 255, 255, 50 - index)
-        size = this.baseSize * 1.8 - index;
-      }
-      this.p5Ref.fill(200, 200, 200, 20);
-      this.p5Ref.ellipse(b.x + 50, b.y + 50, size, size);
     });
   }
 
@@ -181,25 +169,27 @@ class Koi {
   Koi
   ===================*/
 
-const koiColors = ["#384863", "#EEA237", "#E02D28"];
+const koiColors = [
+  "#384863",
+  "#c9c9c7",
+  "#c9c9c7",
+  "#c9c9c7",
+  "#d19b60",
+  "#cf504c",
+];
 /*==================
   Sketch: setup, draw, etc.
   ===================*/
 export default class Flock {
   flock = [];
-  koiNumber = 20;
+  p5Ref = null;
 
   constructor(p5) {
-    new Array(this.koiNumber).fill(1).map((_) => this.flock.push(new Koi(p5)));
+    this.p5Ref = p5;
+    new Array(KOI_NUMBER).fill(1).map((_) => this.flock.push(new Koi(p5)));
   }
 
   draw() {
-    // background(230);
-    // shadow
-    this.flock.forEach((koi) => {
-      koi.showShadow();
-    });
-
     this.flock.forEach((koi) => {
       koi.edges();
       koi.flock(this.flock);
