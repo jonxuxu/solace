@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Sketch from "react-p5";
 import "./App.css";
 
@@ -9,7 +9,7 @@ import MouseTracker from "./utils/mouse";
 
 const holdTime = 1;
 
-function Canvas({ yMap, awareness, onStart }) {
+function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let gameState = "start";
   let needsRotate = false;
 
@@ -20,13 +20,14 @@ function Canvas({ yMap, awareness, onStart }) {
   let bigRipples = [];
   let smallRipples = [];
   let bursts = [];
+  let recievedBursts = false;
 
   // Charge animation
   let holdState = 0;
   let holdTimer = null;
 
   const myClientId = awareness.clientID;
-  let cursors = { [myClientId]: { x: 0, y: 0 } };
+  let cursors = { [myClientId]: { x: 0, y: 0, holdState: 0 } };
 
   let stale = 0;
   let debounce = false;
@@ -34,8 +35,18 @@ function Canvas({ yMap, awareness, onStart }) {
   let xTranslate = 0;
   let yTranslate = 0;
 
-  let poemEngine = null;
 	let mouseTracker = new MouseTracker(awareness, selfClick, selfHoldStart, holdEnd, null, selfBurst);
+  let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
+  let prevLines = 0;
+
+  useEffect(() => {
+    wsProvider.on("status", (event) => {
+      if (event.status === "connected") {
+        prevLines = yMap.get("currentLine");
+        poemEngine.ready();
+      }
+    });
+  }, []);
 
   // Adjust canvas scale and translate based on screen size
   function resizeWindow(p5) {
@@ -194,7 +205,6 @@ function Canvas({ yMap, awareness, onStart }) {
 		// wait until connected?
 		mouseTracker.setupReceivers(p5, otherClick, otherHoldStart, holdEnd, mouseMoved, otherBurst);
 
-    poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap, p5);
     resizeWindow(p5);
     needsRotate = height > width;
   }
@@ -226,11 +236,9 @@ function Canvas({ yMap, awareness, onStart }) {
 
       // Draw cursors
       p5.noStroke();
-			if (cursors[myClientId]) {
-				cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
-				cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
-				DrawFns.drawCursors(p5, cursors, myClientId);
-			}
+      cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
+      cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
+      DrawFns.drawCursors(p5, cursors, myClientId);
 
       // Draw ripples
       p5.fill(0, 0); // fully transparent
@@ -240,7 +248,8 @@ function Canvas({ yMap, awareness, onStart }) {
       // Draw bursts
       p5.fill(255);
       p5.noStroke();
-      DrawFns.drawBurst(p5, bursts);
+      DrawFns.drawBursts(p5, bursts, prevLines);
+      poemEngine.drawPrevLines(p5, prevLines);
     }
   }
 

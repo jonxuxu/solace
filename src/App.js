@@ -24,10 +24,6 @@ const wsProvider = new WebsocketProvider(
   doc
 );
 
-wsProvider.on("status", (event) => {
-  console.log(event.status); // logs "connected" or "disconnected"
-});
-
 const awareness = wsProvider.awareness;
 
 awareness.on("change", ({ updated }) => {
@@ -51,7 +47,6 @@ function playNote() {
 
 function App() {
   const [audio] = useState(new Audio(deepSynth));
-  const [audioVolume, setAudioVolume] = useState(0);
 
   useEffect(() => {
     audio.addEventListener("timeupdate", function () {
@@ -69,7 +64,8 @@ function App() {
       <Poem>
         <div id="poem-centered"></div>
       </Poem>
-      <Canvas
+      <GameCanvas
+        wsProvider={wsProvider}
         yMap={doc.getMap("gameDoc")}
         awareness={awareness}
         onStart={() => {
@@ -131,6 +127,7 @@ const Poem = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   z-index: -2;
   display: flex;
   align-items: center;
@@ -138,4 +135,9 @@ const Poem = styled.div`
   color: white;
   font-size: 32px;
   font-family: "Crimson Text", serif;
+`;
+
+const GameCanvas = styled(Canvas)`
+  width: 100%;
+  height: 100%;
 `;
