@@ -49,7 +49,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
   let prevLines = 0;
   let prevPoem = 0;
-  let fadingPoem = null;
+  let poemFading = false;
 
   useEffect(() => {
     wsProvider.on("synced", () => {
@@ -62,6 +62,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       yMap.observe((yMapEvent) => {
         if (yMapEvent.keysChanged.has("currentPoem")) {
           console.log("poem changed");
+					poemFading = true;
           // New poem, clear bursts and prev lines
           const decreaseInterval = setInterval(() => {
             if (burstOpacity > 5) {
@@ -72,6 +73,8 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
               burstOpacity = 255;
               bursts = [];
               poemEngine.setPoem(yMap.get("currentPoem"));
+							poemFading = false;
+							prevLines = 0;
             }
           }, [50]);
         }
@@ -102,21 +105,22 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
     mouseTracker.resizeCanvas(canvasScale, xTranslate, yTranslate);
   }
 
-  function rippleOnClick(p5, clientID, mouseInfo) {
+  function smallRippleOnClick(p5, clientID, mouseInfo) {
     smallRipples.push({
       x: mouseInfo.x,
       y: mouseInfo.y,
       startTime: Date.now(),
       clientID,
     });
-    /*
-    const { x, y } = mouseInfo;
+  }
+
+  function bigRippleOnClick(p5, clientID, mouseInfo) {
+		const { x, y } = mouseInfo;
     const now = Date.now();
     bigRipples.push({ x, y, clientID, startTime: now });
     bigRipples.push({ x, y, clientID, startTime: now + 100 });
     bigRipples.push({ x, y, clientID, startTime: now + 200 });
-		*/
-  }
+	}
 
   function selfClick(p5, _, mouseInfo) {
     if (gameState === "start") {
@@ -131,11 +135,11 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       }, 50);
       return;
     }
-    rippleOnClick(p5, myClientId, mouseInfo);
+    smallRippleOnClick(p5, myClientId, mouseInfo);
   }
 
   function otherClick(p5, clientID, mouseInfo) {
-    rippleOnClick(p5, clientID, mouseInfo);
+    smallRippleOnClick(p5, clientID, mouseInfo);
   }
 
   function selfHoldStart(p5, clientID, mouseInfo) {
@@ -155,6 +159,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function holdEnd(p5, clientID, mouseInfo) {
+		if (cursors[clientID] === undefined) {
+			console.warn("cursors[clientID] is undefined, clientID:", clientID);
+		}
 		cursors[clientID].chargingBurst = false;
     if (!cursors[clientID]) {
       cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
@@ -176,35 +183,48 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 
   function selfBurst(p5, clientID, mouseInfo) {
 		cursors[clientID].chargingBurst = false;
-    poemEngine.tryAdvanceLine(yMap);
-    const burst = {
-      x: mouseInfo.x,
-      y: mouseInfo.y,
-      poem: yMap.get("currentPoem"),
-      line: yMap.get("currentLine"),
-      startTime: Date.now(),
-      clientID,
-    };
-    if (burst.line > -1) {
-      burst.letters = poemEngine.newBurst(burst);
-      bursts.push(burst);
-    }
+		if (poemFading) {
+			bigRippleOnClick(p5, clientID, mouseInfo);
+		} else {
+			poemEngine.tryAdvanceLine(yMap);
+			const line = yMap.get("currentLine");
+			if (line === -1) {
+				bigRippleOnClick(p5, clientID, mouseInfo);
+			} else {
+				const burst = {
+					x: mouseInfo.x,
+					y: mouseInfo.y,
+					poem: yMap.get("currentPoem"),
+					line: line,
+					startTime: Date.now(),
+					clientID,
+				};
+				burst.letters = poemEngine.newBurst(burst);
+				console.log(`Adding burst poem ${burst.poem}, line ${line}`);
+				bursts.push(burst);
+			}
+		}
   }
 
   function otherBurst(p5, clientID, mouseInfo) {
 		cursors[clientID].chargingBurst = false;
-    const burst = {
-      x: mouseInfo.x,
-      y: mouseInfo.y,
-      poem: yMap.get("currentPoem"),
-      line: yMap.get("currentLine"),
-      startTime: Date.now(),
-      clientID,
-    };
-    if (burst.line > -1) {
-      burst.letters = poemEngine.newBurst(burst);
-      bursts.push(burst);
-    }
+		if (poemFading) {
+			bigRippleOnClick(p5, clientID, mouseInfo);
+		} else {
+			const burst = {
+				x: mouseInfo.x,
+				y: mouseInfo.y,
+				poem: yMap.get("currentPoem"),
+				line: yMap.get("currentLine"),
+				startTime: Date.now(),
+				clientID,
+			};
+			if (burst.line > -1) {
+				burst.letters = poemEngine.newBurst(burst);
+				console.log(`Adding burst poem ${burst.poem}, line ${burst.line}`);
+				bursts.push(burst);
+			}
+		}
   }
 
   function setup(p5, canvasParentRef) {
@@ -232,6 +252,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function draw(p5) {
+		//console.log(poemFading);
     p5.background(0);
 
     if (needsRotate) {
@@ -272,8 +293,10 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       p5.noStroke();
       DrawFns.drawBursts(p5, bursts, prevLines);
       if (showFirstLines) {
+				/*
         let c = p5.color(255, 204, 0, burstOpacity);
         p5.fill(c);
+				*/
         poemEngine.drawPrevLines(p5, prevPoem, prevLines);
       }
 
