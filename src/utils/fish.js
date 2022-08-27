@@ -1,5 +1,3 @@
-import { Vector } from "p5";
-
 class FlockParams {
   constructor() {
     this.maxForce = 0.08;
@@ -7,24 +5,31 @@ class FlockParams {
     this.perceptionRadius = 100;
     this.alignAmp = 1;
     this.cohesionAmp = 1;
-    this.separationAmp = 1;
+    this.separationAmp = 1.5;
   }
 }
 
 let flockParams = new FlockParams();
 
 class Koi {
-  constructor(x, y, koiColor, p5) {
-    this.color = p5.color(koiColor);
+  constructor(p5) {
+    const x = p5.random(1920 - 200, 200);
+    const y = p5.random(1080 - 200, 200);
+
+    this.color = p5.color(p5.random(koiColors));
     this.offsetX = p5.random(-100, 100);
     this.offsetY = p5.random(-100, 100);
     this.position = p5.createVector(x + this.offsetX, y + this.offsetY);
-    this.velocity = Vector.random2D();
+    // console.log("position", this.position);
+    this.velocity = p5.constructor.Vector.random2D();
+    // console.log("velocity", this.velocity);
     this.velocity.setMag(p5.random(2, 10));
+    // console.log("velocity2", this.velocity);
     this.acceleration = p5.createVector();
+    // console.log(this.velocity, this.acceleration);
     this.maxForce = flockParams.maxForce;
     this.maxSpeed = flockParams.maxSpeed;
-    this.baseSize = p5.int(p5.random(15, 20));
+    this.baseSize = p5.int(p5.random(5, 10));
     this.bodyLength = this.baseSize * 2;
     this.body = new Array(this.bodyLength).fill({ ...this.position });
     this.p5Ref = p5;
@@ -49,7 +54,10 @@ class Koi {
             steering.add(other.position);
             break;
           case "separation":
-            let diff = Vector.sub(this.position, other.position);
+            let diff = this.p5Ref.constructor.Vector.sub(
+              this.position,
+              other.position
+            );
             diff.div(d);
             steering.add(diff);
             break;
@@ -85,7 +93,7 @@ class Koi {
       obstacle.y
     );
     if (d < flockParams.perceptionRadius) {
-      let diff = Vector.sub(this.position, obstacle);
+      let diff = this.p5Ref.constructor.Vector.sub(this.position, obstacle);
       diff.div(d);
       steering.add(diff);
       steering.setMag(flockParams.maxSpeed);
@@ -113,23 +121,19 @@ class Koi {
     let alignment = this.align(kois);
     let cohesion = this.cohesion(kois);
     let separation = this.separation(kois);
-
     let mouseObstacle = this.p5Ref.createVector(
       this.p5Ref.mouseX,
       this.p5Ref.mouseY
     );
     let avoid = this.avoid(mouseObstacle);
-
     alignment.mult(flockParams.alignAmp);
     cohesion.mult(flockParams.cohesionAmp);
     separation.mult(flockParams.separationAmp);
-
     this.acceleration.add(avoid);
     this.acceleration.add(separation);
     this.acceleration.add(alignment);
     this.acceleration.add(cohesion);
-
-    this.acceleration.add(Vector.random2D().mult(0.05));
+    this.acceleration.add(this.p5Ref.constructor.Vector.random2D().mult(0.05));
   }
 
   updateBody() {
@@ -166,14 +170,10 @@ class Koi {
   }
 
   update() {
-    console.log(this.velocity);
-    console.log(this.acceleration);
-    console.log(flockParams.maxSpeed);
-
     this.position.add(this.velocity);
     this.velocity.add(this.acceleration);
     this.velocity.limit(flockParams.maxSpeed);
-    // this.updateBody();
+    this.updateBody();
   }
 }
 
@@ -181,7 +181,7 @@ class Koi {
   Koi
   ===================*/
 
-const koiColors = ["#E95D0C", "#EEA237", "#E02D28"];
+const koiColors = ["#384863", "#EEA237", "#E02D28"];
 /*==================
   Sketch: setup, draw, etc.
   ===================*/
@@ -190,13 +190,7 @@ export default class Flock {
   koiNumber = 20;
 
   constructor(p5) {
-    const centerX = p5.random(1920 - 200, 200);
-    const centerY = p5.random(1080 - 200, 200);
-
-    const color = p5.random(koiColors);
-    new Array(this.koiNumber)
-      .fill(1)
-      .map((_) => this.flock.push(new Koi(centerX, centerY, color, p5)));
+    new Array(this.koiNumber).fill(1).map((_) => this.flock.push(new Koi(p5)));
   }
 
   draw() {
@@ -208,7 +202,7 @@ export default class Flock {
 
     this.flock.forEach((koi) => {
       koi.edges();
-      //   koi.flock(this.flock);
+      koi.flock(this.flock);
       koi.update();
       koi.show();
     });
