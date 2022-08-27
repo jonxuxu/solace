@@ -20,7 +20,8 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let bigRipples = [];
   let smallRipples = [];
   let bursts = [];
-  let recievedBursts = false;
+  let showFirstLines = true;
+  let burstOpacity = 255;
 
   // Charge animation
   let holdState = 0;
@@ -38,12 +39,33 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 	let mouseTracker = new MouseTracker(awareness, selfClick, selfHoldStart, holdEnd, null, selfBurst);
   let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
   let prevLines = 0;
+  let prevPoem = 0;
 
   useEffect(() => {
     wsProvider.on("status", (event) => {
       if (event.status === "connected") {
         prevLines = yMap.get("currentLine");
+        prevPoem = yMap.get("currentPoem");
         poemEngine.ready();
+      }
+    });
+
+    yMap.observe((yMapEvent) => {
+      if (yMapEvent.keysChanged.has("currentPoem")) {
+        // New poem, clear bursts and prev lines
+        const decreaseInterval = setInterval(() => {
+          if (burstOpacity > 5) {
+            burstOpacity -= 5;
+          } else {
+            clearInterval(decreaseInterval);
+            showFirstLines = false;
+            burstOpacity = 255;
+            bursts = [];
+          }
+        }, [50]);
+      }
+      if (yMapEvent.keysChanged.has("currentLine")) {
+        poemEngine.lineUpdated();
       }
     });
   }, []);
@@ -246,10 +268,14 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       smallRipples = DrawFns.drawSmallRipples(p5, smallRipples);
 
       // Draw bursts
-      p5.fill(255);
+      p5.fill(burstOpacity);
       p5.noStroke();
       DrawFns.drawBursts(p5, bursts, prevLines);
-      poemEngine.drawPrevLines(p5, prevLines);
+      if (showFirstLines) {
+        let c = p5.color(255, 204, 0, burstOpacity);
+        p5.fill(c);
+        poemEngine.drawPrevLines(p5, prevPoem, prevLines);
+      }
     }
   }
 
