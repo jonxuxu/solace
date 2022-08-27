@@ -51,6 +51,7 @@ export default class PoemEngine {
 
     // Draw all the earlier lines
     this.setPoem(poem);
+		this.lineUpdated();
 		return { line, poem };
   }
 

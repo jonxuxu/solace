@@ -136,7 +136,6 @@ export default class MouseTracker {
   };
 
   mouseReleased = (p5) => {
-    console.log("mouseReleased");
     clearTimeout(this.startHold_id);
     const now = Date.now();
     this.lastEvent = now;

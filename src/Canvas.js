@@ -103,11 +103,19 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function rippleOnClick(p5, clientID, mouseInfo) {
+		smallRipples.push({
+			x: mouseInfo.x,
+			y: mouseInfo.y,
+			startTime: Date.now(),
+			clientID,
+		});
+		/*
     const { x, y } = mouseInfo;
     const now = Date.now();
     bigRipples.push({ x, y, clientID, startTime: now });
     bigRipples.push({ x, y, clientID, startTime: now + 100 });
     bigRipples.push({ x, y, clientID, startTime: now + 200 });
+		*/
   }
 
   function selfClick(p5, _, mouseInfo) {
