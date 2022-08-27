@@ -5,6 +5,9 @@ import "./App.css";
 import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
+import MouseTracker from "./utils/mouse";
+
+const holdTime = 1;
 
 function Canvas({ yMap, awareness, onStart }) {
   let gameState = "start";
@@ -32,6 +35,7 @@ function Canvas({ yMap, awareness, onStart }) {
   let yTranslate = 0;
 
   let poemEngine = null;
+	let mouseTracker = new MouseTracker(awareness, selfClick, selfHoldStart, holdEnd, null, selfBurst);
 
   // Adjust canvas scale and translate based on screen size
   function resizeWindow(p5) {
@@ -50,17 +54,19 @@ function Canvas({ yMap, awareness, onStart }) {
     needsRotate = height > width;
     p5.resizeCanvas(width, height);
     poemEngine.resizeCanvas(canvasScale, xTranslate, yTranslate);
+		mouseTracker.resizeCanvas(canvasScale, xTranslate, yTranslate);
   }
 
-  function mousePressed(p5) {
-    if (debounce) {
-      return;
-    }
-    debounce = true;
-    setTimeout(() => {
-      debounce = false;
-    }, 300);
+	function rippleOnClick(p5, clientID, mouseInfo) {
+		smallRipples.push({
+			x: mouseInfo.x,
+			y: mouseInfo.y,
+			startTime: Date.now(),
+			clientID,
+		});
+	}
 
+	function selfClick(p5, _, mouseInfo) {
     if (gameState === "start") {
       onStart();
       const fadeInterval = setInterval(() => {
@@ -73,14 +79,35 @@ function Canvas({ yMap, awareness, onStart }) {
       }, 50);
       return;
     }
+		rippleOnClick(p5, myClientId, mouseInfo);
+	}
 
-    awareness.setLocalStateField("canvasInfo", {
-      smallRipple: {
-        x: p5.mouseX * canvasScale + xTranslate,
-        y: p5.mouseY * canvasScale + yTranslate,
-        timestamp: Date.now(), // only used to ensure uniqueness
-      },
-    });
+	function otherClick(p5, clientID, mouseInfo) {
+		rippleOnClick(p5, clientID, mouseInfo);
+	}
+
+	function selfHoldStart(p5, clientID, mouseInfo) {
+		cursors[clientID].holdStart = Date.now();
+		holdTimer = setTimeout(() => {
+			mouseTracker.onBurst(p5);
+		}, holdTime);
+	}
+
+	function otherHoldStart(p5, clientID, mouseInfo) {
+    if (!cursors[clientID]) {
+			cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
+		}
+		cursors[clientID].holdStart = Date.now();
+	}
+
+	function holdEnd(p5, clientID, mouseInfo) {
+		if (!cursors[clientID]) {
+			cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
+		}
+		cursors[clientID].holdStart = null;
+	}
+
+	/*
     // Linearly increment the hold state until it reaches 100 in 2 seconds
     holdTimer = setInterval(() => {
       if (holdState < 100) {
@@ -118,45 +145,32 @@ function Canvas({ yMap, awareness, onStart }) {
       }
     }, 100);
   }
+*/
 
-  function mouseReleased() {
-    clearInterval(holdTimer);
-    holdState = 0;
+  function mouseMoved(p5, clientID, mouseInfo) {
+    if (!cursors[clientID]) {
+			cursors[clientID] = {
+				interpolator: new Interpolator((point) => {
+					cursors[clientID].x = point[0];
+					cursors[clientID].y = point[1];
+				}),
+			};
+		}
+    cursors[clientID].interpolator.addPoint(mouseInfo);
   }
 
-  function mouseMoved(p5) {
-    // Update mouse position every frame
-    if (stale > 7) {
-      awareness.setLocalStateField("canvasInfo", {
-        mouse: {
-          x: p5.mouseX * canvasScale + xTranslate,
-          y: p5.mouseY * canvasScale + yTranslate,
-          holdState: holdState,
-        },
-      });
-      stale = 0;
-    }
-    stale++;
-  }
+	function selfBurst(p5, clientID, mouseInfo) {
+		bursts.push({
+			x: mouseInfo.x,
+			y: mouseInfo.y,
+			startTime: Date.now(),
+			clientID,
+		});
+	}
 
   function awarenessUpdate(p5, clientID, canvasInfo) {
     const { smallRipple, bigRipple, burst, mouse, removed } = canvasInfo;
     const now = Date.now();
-    if (smallRipple) {
-      smallRipples.push({
-        x: smallRipple.x,
-        y: smallRipple.y,
-        startTime: now,
-      });
-    }
-    // Big ripple location
-    if (bigRipple) {
-      bigRipples.push(
-        { x: bigRipple.x, y: bigRipple.y, startTime: now },
-        { x: bigRipple.x, y: bigRipple.y, startTime: now + 100 },
-        { x: bigRipple.x, y: bigRipple.y, startTime: now + 200 }
-      );
-    }
     if (burst) {
       const letters = poemEngine.newBurst(burst);
       bursts.push({
@@ -164,26 +178,6 @@ function Canvas({ yMap, awareness, onStart }) {
         letters,
         startTime: now,
       });
-    }
-
-    if (mouse) {
-      // Add to spline if not own cursor
-      if (!cursors[clientID]) {
-        cursors[clientID] = {};
-        if (clientID !== myClientId) {
-          cursors[clientID] = {
-            interpolator: new Interpolator((point) => {
-              cursors[clientID].x = point[0];
-              cursors[clientID].y = point[1];
-            }),
-          };
-        }
-      }
-
-      if (clientID !== myClientId) {
-        cursors[clientID].interpolator.addPoint(mouse);
-      }
-      cursors[clientID].holdState = mouse.holdState;
     }
   }
 
@@ -194,6 +188,9 @@ function Canvas({ yMap, awareness, onStart }) {
     p5.ellipseMode(p5.RADIUS);
     p5.textFont("Crimson Text");
     phoneImg = p5.loadImage("./iphone2.png");
+
+		// wait until connected?
+		mouseTracker.setupReceivers(p5, otherClick, otherHoldStart, holdEnd, mouseMoved, otherBurst);
 
     poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap, p5);
     resizeWindow(p5);
@@ -245,9 +242,11 @@ function Canvas({ yMap, awareness, onStart }) {
 
       // Draw cursors
       p5.noStroke();
-      cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
-      cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
-      DrawFns.drawCursors(p5, cursors, myClientId);
+			if (cursors[myClientId]) {
+				cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
+				cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
+				DrawFns.drawCursors(p5, cursors, myClientId);
+			}
 
       // Draw ripples
       p5.fill(0, 0); // fully transparent
@@ -265,9 +264,10 @@ function Canvas({ yMap, awareness, onStart }) {
     <Sketch
       setup={setup}
       draw={draw}
-      mousePressed={mousePressed}
-      mouseReleased={mouseReleased}
-      mouseMoved={mouseMoved}
+      mousePressed={mouseTracker.mousePressed}
+      mouseReleased={mouseTracker.mouseReleased}
+      mouseMoved={mouseTracker.mouseMoved}
+		  mouseDragged={mouseTracker.mouseMoved}
       className="Canvas"
       windowResized={resizeWindow}
     />

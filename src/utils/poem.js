@@ -75,6 +75,10 @@ export default class PoemEngine {
   };
 
   setPoem = (idx) => {
+		if (!idx) {
+			console.warn("poem index undefined");
+			idx = 0;
+		}
     const centered = document.getElementById("poem-centered");
     centered.style.fontSize = `${32 / this.canvasScale}px`;
     while (centered.firstChild) {
