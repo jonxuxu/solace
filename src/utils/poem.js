@@ -1,6 +1,6 @@
 import poems from ".././poems.json";
 
-const LINE_TIMEOUT = 5000;
+const LINE_TIMEOUT = 9000;
 
 function getOffset(el) {
   var body, _x, _y;
@@ -33,9 +33,6 @@ export default class PoemEngine {
     this.xTranslate = xt;
     this.yTranslate = yt;
     this.yMap = ym;
-    this.advanceTimer = setTimeout(() => {
-      this.canAdvance = true;
-    }, LINE_TIMEOUT);
   }
 
   ready() {
@@ -77,7 +74,7 @@ export default class PoemEngine {
 
   setPoem = (idx) => {
 		console.log("setPoem", idx);
-		if (!idx) {
+		if (idx === undefined) {
 			console.warn("poem index undefined");
 			idx = 0;
 		}
@@ -144,7 +141,11 @@ export default class PoemEngine {
     return letters;
   };
 
-  advanceLine = () => {
+  tryAdvanceLine = () => {
+		if (!this.canAdvance) {
+			console.log("no advancing yet");
+			return;
+		}
     console.log("advancing from line " + this.yMap.get("currentLine"));
     const currentPoem = this.yMap.get("currentPoem");
     const currentLine = this.yMap.get("currentLine");

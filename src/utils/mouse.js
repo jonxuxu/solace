@@ -87,7 +87,6 @@ export default class MouseTracker {
 				});
 			}
 		});
-
 	}
 
 	resizeCanvas = (canvasScale, xTranslate, yTranslate) => {
@@ -97,7 +96,6 @@ export default class MouseTracker {
 	}
 
 	mousePressed = (p5) => {
-		console.log("mousePressed");
 		const now = Date.now();
 		if (now - this.lastPress < DEBOUNCE_DELAY) {
 			return;
@@ -121,7 +119,6 @@ export default class MouseTracker {
 	}
 
 	mouseReleased = (p5) => {
-		console.log("mouseReleased");
 		clearTimeout(this.startHold_id);
 		const now = Date.now();
 		this.lastEvent = now;
@@ -147,7 +144,6 @@ export default class MouseTracker {
 	}
 
 	mouseMoved = (p5) => {
-		console.log("mouseMoved");
 		const now = Date.now();
 		let mouseInfo = {
 			x: p5.mouseX * this.canvasScale + this.xTranslate,
@@ -166,7 +162,6 @@ export default class MouseTracker {
 	}
 
 	onBurst = (p5) => {
-		console.log("onBurst");
 		const now = Date.now();
 		this.lastEvent = now;
 
@@ -180,6 +175,6 @@ export default class MouseTracker {
 		if (this.selfBurst) {
 			this.selfBurst(p5, this.myClientID, mouseInfo);
 		}
-		this.awareness.setLocalStateField("burst", true);
+		this.awareness.setLocalStateField("mouse", mouseInfo);
 	}
 }

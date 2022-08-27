@@ -40,6 +40,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
   let prevLines = 0;
   let prevPoem = 0;
+	let fadingPoem = null;
 
   useEffect(() => {
     wsProvider.on("status", (event) => {
@@ -93,12 +94,11 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
 	function rippleOnClick(p5, clientID, mouseInfo) {
-		smallRipples.push({
-			x: mouseInfo.x,
-			y: mouseInfo.y,
-			startTime: Date.now(),
-			clientID,
-		});
+		const { x, y } = mouseInfo;
+		const now = Date.now();
+		bigRipples.push({ x, y, clientID, startTime: now });
+		bigRipples.push({ x, y, clientID, startTime: now + 100 });
+		bigRipples.push({ x, y, clientID, startTime: now + 200 });
 	}
 
 	function selfClick(p5, _, mouseInfo) {
@@ -155,7 +155,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
 	function selfBurst(p5, clientID, mouseInfo) {
-		poemEngine.advanceLine(yMap);
+		poemEngine.tryAdvanceLine(yMap);
 		const burst = {
 			x: mouseInfo.x,
 			y: mouseInfo.y,
@@ -174,13 +174,15 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 		const burst = {
 			x: mouseInfo.x,
 			y: mouseInfo.y,
+			poem: yMap.get("currentPoem"),
+			line: yMap.get("currentLine"),
 			startTime: Date.now(),
 			clientID,
 		}
-		const { letters, line } = poemEngine.newBurst(burst);
-		burst.letters = letters;
-		burst.line = line;
-		bursts.push(burst);
+		if (burst.line > -1) {
+			burst.letters = poemEngine.newBurst(burst);
+			bursts.push(burst);
+		}
 	}
 
   function setup(p5, canvasParentRef) {
