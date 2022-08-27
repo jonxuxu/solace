@@ -62,6 +62,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
             showFirstLines = false;
             burstOpacity = 255;
             bursts = [];
+						poemEngine.setPoem(yMap.get("currentPoem"));
           }
         }, [50]);
       }

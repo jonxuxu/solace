@@ -76,6 +76,7 @@ export default class PoemEngine {
   };
 
   setPoem = (idx) => {
+		console.log("setPoem", idx);
 		if (!idx) {
 			console.warn("poem index undefined");
 			idx = 0;
