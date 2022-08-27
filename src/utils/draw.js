@@ -88,7 +88,6 @@ function drawLetter(p5, letterInfo, burst, time) {
 }
 
 function drawBursts(p5, bursts) {
-  console.log(bursts);
   p5.textAlign(p5.LEFT, p5.TOP);
   const now = Date.now();
   bursts.forEach((burst) => {

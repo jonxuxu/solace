@@ -6,7 +6,7 @@ import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
 
-function Canvas({ yStatus, yMap, awareness, onStart }) {
+function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let gameState = "start";
   let needsRotate = false;
 
@@ -34,11 +34,14 @@ function Canvas({ yStatus, yMap, awareness, onStart }) {
   let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
 
   useEffect(() => {
-    if (yStatus === "connected") {
-      console.log("set poem engine");
-      poemEngine.ready();
-    }
-  }, [yStatus]);
+    wsProvider.on("status", (event) => {
+      console.log(event.status); // logs "connected" or "disconnected"
+      if (event.status === "connected") {
+        console.log("set poem engine");
+        poemEngine.ready();
+      }
+    });
+  }, []);
 
   // Adjust canvas scale and translate based on screen size
   function resizeWindow(p5) {
