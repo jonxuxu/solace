@@ -36,22 +36,22 @@ export default class PoemEngine {
   }
 
   ready() {
-		let poem = this.yMap.get("currentPoem");
-		let line = this.yMap.get("currentLine");
+    let poem = this.yMap.get("currentPoem");
+    let line = this.yMap.get("currentLine");
     // Init shared values if not already set
     if (poem === undefined) {
-			console.log("currentPoem is undefined, setting to 0");
+      console.log("currentPoem is undefined, setting to 0");
       this.yMap.set("currentPoem", 0);
-			poem = 0;
+      poem = 0;
     }
-		if (line === undefined) {
-			this.yMap.set("currentLine", -1);
-			line = -1;
-		}
+    if (line === undefined) {
+      this.yMap.set("currentLine", -1);
+      line = -1;
+    }
 
     // Draw all the earlier lines
     this.setPoem(poem);
-		return { line, poem };
+    return { line, poem };
   }
 
   lineUpdated() {
@@ -74,11 +74,11 @@ export default class PoemEngine {
   };
 
   setPoem = (idx) => {
-		console.log("setPoem", idx);
-		if (idx === undefined) {
-			console.warn("poem index undefined");
-			idx = 0;
-		}
+    console.log("setPoem", idx);
+    if (idx === undefined) {
+      console.warn("poem index undefined");
+      idx = 0;
+    }
     const centered = document.getElementById("poem-centered");
     centered.style.fontSize = `${32 / this.canvasScale}px`;
     while (centered.firstChild) {
@@ -104,8 +104,9 @@ export default class PoemEngine {
   };
 
   newBurst = (burst) => {
-		console.log(`new burst ${burst.poem}, ${burst.line}`);
-    const lineDiv = document.getElementById("poem-centered").children[burst.line];
+    console.log(`new burst ${burst.poem}, ${burst.line}`);
+    const lineDiv =
+      document.getElementById("poem-centered").children[burst.line];
     let letters = poems[burst.poem].verses[burst.line]
       .split("")
       .map((letter, index) => {
@@ -125,16 +126,16 @@ export default class PoemEngine {
         const v2Y = endPosY - midPosY;
 
         return {
-					letter,
-					index,
-					scale,
-					v1X,
-					v1Y,
-					v2X,
-					v2Y,
-					endTime,
-				}
-			})
+          letter,
+          index,
+          scale,
+          v1X,
+          v1Y,
+          v2X,
+          v2Y,
+          endTime,
+        };
+      })
       .filter((letter) => {
         return letter.letter !== " ";
       });
@@ -143,10 +144,10 @@ export default class PoemEngine {
   };
 
   tryAdvanceLine = () => {
-		if (!this.canAdvance) {
-			console.log("no advancing yet");
-			return;
-		}
+    if (!this.canAdvance) {
+      console.log("no advancing yet");
+      return;
+    }
     console.log("advancing from line " + this.yMap.get("currentLine"));
     const currentPoem = this.yMap.get("currentPoem");
     const currentLine = this.yMap.get("currentLine");
@@ -161,7 +162,6 @@ export default class PoemEngine {
   };
 
   drawPrevLines = (p5, prevPoem, prevLines) => {
-		console.log("drawPrevLines", prevLines);
     const poemDiv = document.getElementById("poem-centered");
     if (poemDiv.children.length > 0) {
       p5.noStroke();

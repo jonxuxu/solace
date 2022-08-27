@@ -166,10 +166,14 @@ class Koi {
   }
 
   update() {
+    console.log(this.velocity);
+    console.log(this.acceleration);
+    console.log(flockParams.maxSpeed);
+
     this.position.add(this.velocity);
     this.velocity.add(this.acceleration);
     this.velocity.limit(flockParams.maxSpeed);
-    this.updateBody();
+    // this.updateBody();
   }
 }
 
@@ -204,7 +208,7 @@ export default class Flock {
 
     this.flock.forEach((koi) => {
       koi.edges();
-      koi.flock(this.flock);
+      //   koi.flock(this.flock);
       koi.update();
       koi.show();
     });
