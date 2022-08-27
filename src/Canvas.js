@@ -17,6 +17,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let bigRipples = [];
   let smallRipples = [];
   let bursts = [];
+  let recievedBursts = false;
 
   // Charge animation
   let holdState = 0;
@@ -32,6 +33,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let yTranslate = 0;
 
   let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
+  let prevLines = 0;
 
   useEffect(() => {
     wsProvider.on("status", (event) => {
@@ -39,6 +41,8 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       if (event.status === "connected") {
         console.log("set poem engine");
         poemEngine.ready();
+        prevLines = yMap.get("currentLine");
+        console.log("init", prevLines);
       }
     });
   }, []);
@@ -174,6 +178,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
         ...burst,
         letters,
         startTime: now,
+        line: yMap.get("currentLine"),
       });
     }
 
@@ -276,8 +281,8 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       // Draw bursts
       p5.fill(255);
       p5.noStroke();
-      DrawFns.drawBursts(p5, bursts);
-      poemEngine.drawPrevLines(p5);
+      DrawFns.drawBursts(p5, bursts, prevLines);
+      poemEngine.drawPrevLines(p5, prevLines);
     }
   }
 

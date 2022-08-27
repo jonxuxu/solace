@@ -7,6 +7,7 @@ const smallRippleWidth = 2.5;
 
 const burstTime1 = 1;
 const burstTime2 = 3;
+const maxBurstEndTime = burstTime1 + burstTime2 + 1;
 
 const cursorAlpha = 100;
 const cursorRadius = 9;
@@ -87,12 +88,13 @@ function drawLetter(p5, letterInfo, burst, time) {
   p5.pop();
 }
 
-function drawBursts(p5, bursts) {
+function drawBursts(p5, bursts, prevLines) {
+  console.log("draw bursts");
   p5.textAlign(p5.LEFT, p5.TOP);
   const now = Date.now();
   bursts.forEach((burst) => {
     const time = (now - burst.startTime) / 1000;
-    if (time < burst.endTime) {
+    if (burst.line >= prevLines) {
       burst.letters.forEach((letter) => {
         drawLetter(p5, letter, burst, time);
       });

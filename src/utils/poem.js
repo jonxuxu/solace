@@ -51,7 +51,7 @@ export default class PoemEngine {
     console.log("ready");
     // Init shared values if not already set
     if (this.yMap.get("currentLine") === undefined) {
-      this.yMap.set("currentLine", 0);
+      this.yMap.set("currentLine", -1);
     }
     if (this.yMap.get("currentPoem") === undefined) {
       this.yMap.set("currentPoem", 0);
@@ -156,21 +156,21 @@ export default class PoemEngine {
   };
 
   advanceLine = () => {
-    console.log("advance line");
     const currentPoem = this.yMap.get("currentPoem");
     const currentLine = this.yMap.get("currentLine");
+    console.log("advancing from " + currentLine + " to " + (currentLine + 1));
     // set default poem if not defined in shared map
     if (currentLine < poems[currentPoem].verses.length - 1) {
       this.yMap.set("currentLine", currentLine + 1);
     } else {
-      this.yMap.set("currentLine", 0);
+      this.yMap.set("currentLine", -1);
       this.yMap.set("currentPoem", (currentPoem + 1) % poems.length);
       // TODO: current poem should fade away
       this.yMap.set("currentPoem", currentPoem);
     }
   };
 
-  drawPrevLines = (p5) => {
+  drawPrevLines = (p5, prevLines) => {
     const currentPoem = this.yMap.get("currentPoem");
     const currentLine = this.yMap.get("currentLine");
     const poemDiv = document.getElementById("poem-centered");
@@ -179,7 +179,7 @@ export default class PoemEngine {
       p5.noStroke();
       p5.textSize(32);
 
-      for (let i = 0; i < currentLine; i++) {
+      for (let i = 0; i <= prevLines; i++) {
         const { top, left } = getOffset(poemDiv.children[i].children[0]);
         const x = left * this.canvasScale + this.xTranslate;
         const y = top * this.canvasScale + this.yTranslate;
