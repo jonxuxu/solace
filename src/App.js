@@ -34,26 +34,28 @@ awareness.on("change", ({ updated }) => {
       // key is the clientID
       const state = states.get(key); // state is updated awareness state
       const { canvasInfo } = state;
-			if (canvasInfo) {
-				if (canvasInfo.note) {
-					playNote();
-				}
-				if (canvasInfo.gong) {
-					playGong();
-				}
-			}
+      if (canvasInfo) {
+        if (canvasInfo.note) {
+          playNote();
+        }
+        if (canvasInfo.gong) {
+          playGong();
+        }
+      }
     });
   }
 });
 
 function playNote() {
   const audio = new Audio(notes[Math.floor(Math.random() * notes.length)]);
+  audio.volume(1);
   audio.play();
 }
 
 function playGong() {
-	const audio = new Audio(gong);
-	audio.play();
+  const audio = new Audio(gong);
+  audio.volume(0.5);
+  audio.play();
 }
 
 function App() {
