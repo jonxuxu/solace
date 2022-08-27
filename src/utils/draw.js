@@ -1,9 +1,9 @@
 const bigRippleSpeed = 50;
-const smallRippleSpeed = 20;
 const bigRippleMaxTime = 3;
-const bigRippleWidth = 4;
+const bigRippleWidth = 2;
+const smallRippleSpeed = 20;
 const smallRippleMaxTime = 3;
-const smallRippleWidth = 2.5;
+const smallRippleWidth = 2;
 
 const holdTime = 1;
 const burstTime1 = 1;

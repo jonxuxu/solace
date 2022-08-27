@@ -33,22 +33,25 @@ export default class PoemEngine {
     this.xTranslate = xt;
     this.yTranslate = yt;
     this.yMap = ym;
-    this.advanceTimer = setTimeout(() => {
-      this.canAdvance = true;
-    }, LINE_TIMEOUT);
   }
 
   ready() {
+		let poem = this.yMap.get("currentPoem");
+		let line = this.yMap.get("currentLine");
     // Init shared values if not already set
-    if (this.yMap.get("currentLine") === undefined) {
-      this.yMap.set("currentLine", -1);
-    }
-    if (this.yMap.get("currentPoem") === undefined) {
+    if (poem === undefined) {
+			console.log("currentPoem is undefined, setting to 0");
       this.yMap.set("currentPoem", 0);
+			poem = 0;
     }
+		if (line === undefined) {
+			this.yMap.set("currentLine", -1);
+			line = -1;
+		}
 
     // Draw all the earlier lines
-    this.setPoem(this.yMap.get("currentPoem"));
+    this.setPoem(poem);
+		return { line, poem };
   }
 
   lineUpdated() {
@@ -71,7 +74,8 @@ export default class PoemEngine {
   };
 
   setPoem = (idx) => {
-		if (!idx) {
+		console.log("setPoem", idx);
+		if (idx === undefined) {
 			console.warn("poem index undefined");
 			idx = 0;
 		}
@@ -138,7 +142,11 @@ export default class PoemEngine {
     return letters;
   };
 
-  advanceLine = () => {
+  tryAdvanceLine = () => {
+		if (!this.canAdvance) {
+			console.log("no advancing yet");
+			return;
+		}
     console.log("advancing from line " + this.yMap.get("currentLine"));
     const currentPoem = this.yMap.get("currentPoem");
     const currentLine = this.yMap.get("currentLine");

@@ -180,7 +180,6 @@ export default class MouseTracker {
   };
 
   onBurst = (p5) => {
-    console.log("onBurst");
     const now = Date.now();
     this.lastEvent = now;
 
@@ -194,6 +193,6 @@ export default class MouseTracker {
     if (this.selfBurst) {
       this.selfBurst(p5, this.myClientID, mouseInfo);
     }
-    this.awareness.setLocalStateField("burst", true);
+    this.awareness.setLocalStateField("mouse", mouseInfo);
   };
 }
