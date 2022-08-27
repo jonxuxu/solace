@@ -39,10 +39,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
     wsProvider.on("status", (event) => {
       console.log(event.status); // logs "connected" or "disconnected"
       if (event.status === "connected") {
-        console.log("set poem engine");
-        poemEngine.ready();
         prevLines = yMap.get("currentLine");
         console.log("init", prevLines);
+        poemEngine.ready();
       }
     });
   }, []);

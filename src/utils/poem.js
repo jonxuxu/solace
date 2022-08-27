@@ -48,7 +48,7 @@ export default class PoemEngine {
   }
 
   ready() {
-    console.log("ready");
+    console.log("ready", this.yMap.get("currentLine"));
     // Init shared values if not already set
     if (this.yMap.get("currentLine") === undefined) {
       this.yMap.set("currentLine", -1);
