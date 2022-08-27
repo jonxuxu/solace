@@ -100,18 +100,8 @@ export default class PoemEngine {
   };
 
   newBurst = (burst) => {
-    if (this.yMap.get("currentLine") == -1) {
-      return [];
-    }
-    // console.log(this.yMap.get("currentPoem"), this.yMap.get("currentLine"));
-    const lineDiv =
-      document.getElementById("poem-centered").children[
-        this.yMap.get("currentLine")
-      ];
-    console.log(this.yMap.get("currentPoem"), this.yMap.get("currentLine"));
-    let letters = poems[this.yMap.get("currentPoem")].verses[
-      this.yMap.get("currentLine")
-    ]
+    const lineDiv = document.getElementById("poem-centered").children[burst.poem];
+    let letters = poems[burst.poem].verses[burst.line]
       .split("")
       .map((letter, index) => {
         const letterDiv = lineDiv.children[index];
@@ -130,16 +120,16 @@ export default class PoemEngine {
         const v2Y = endPosY - midPosY;
 
         return {
-          letter,
-          index,
-          scale,
-          v1X,
-          v1Y,
-          v2X,
-          v2Y,
-          endTime,
-        };
-      })
+					letter,
+					index,
+					scale,
+					v1X,
+					v1Y,
+					v2X,
+					v2Y,
+					endTime,
+				}
+			})
       .filter((letter) => {
         return letter.letter !== " ";
       });
@@ -162,6 +152,7 @@ export default class PoemEngine {
   };
 
   drawPrevLines = (p5, prevPoem, prevLines) => {
+		console.log("drawPrevLines", prevLines);
     const poemDiv = document.getElementById("poem-centered");
     if (poemDiv.children.length > 0) {
       p5.noStroke();

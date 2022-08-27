@@ -46,7 +46,10 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       if (event.status === "connected") {
         prevLines = yMap.get("currentLine");
         prevPoem = yMap.get("currentPoem");
+				console.log(prevLines, prevPoem);
         poemEngine.ready();
+				prevLines = -1;
+				prevPoem = 0;
       }
     });
 
@@ -197,11 +200,15 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 		const burst = {
 			x: mouseInfo.x,
 			y: mouseInfo.y,
+			poem: yMap.get("currentPoem"),
+			line: yMap.get("currentLine"),
 			startTime: Date.now(),
 			clientID,
 		}
-		burst.letters = poemEngine.newBurst(burst);
-		bursts.push(burst);
+		if (burst.line > -1) {
+			burst.letters = poemEngine.newBurst(burst);
+			bursts.push(burst);
+		}
 	}
 
 	function otherBurst(p5, clientID, mouseInfo) {
@@ -212,7 +219,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 			startTime: Date.now(),
 			clientID,
 		}
-		burst.letters = poemEngine.newBurst(burst);
+		const { letters, line } = poemEngine.newBurst(burst);
+		burst.letters = letters;
+		burst.line = line;
 		bursts.push(burst);
 	}
 
