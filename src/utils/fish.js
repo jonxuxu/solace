@@ -169,14 +169,7 @@ class Koi {
   Koi
   ===================*/
 
-const koiColors = [
-  "#384863",
-  "#c9c9c7",
-  "#c9c9c7",
-  "#c9c9c7",
-  "#d19b60",
-  "#cf504c",
-];
+const koiColors = ["#c9c9c7", "#5c5c5c"];
 /*==================
   Sketch: setup, draw, etc.
   ===================*/
