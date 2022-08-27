@@ -16,11 +16,11 @@ export default class MouseTracker {
 
 	constructor(awareness, selfClick, selfHoldStart, selfHoldEnd, selfMouseMove, selfBurst) {
 		this.awareness = awareness;
-		this.selfClick = sc;
-		this.selfHoldStart = shs;
-		this.selfHoldEnd = she;
-		this.selfMouseMove = smm;
-		this.selfBurst = sb;
+		this.selfClick = selfClick;
+		this.selfHoldStart = selfHoldStart;
+		this.selfHoldEnd = selfHoldEnd;
+		this.selfMouseMove = selfMouseMove;
+		this.selfBurst = selfBurst;
 		this.myClientID = this.awareness.clientID;
 	}
 
@@ -80,6 +80,12 @@ export default class MouseTracker {
 					}
 				}
 			});
+			// Remove cursors that are no longer in the awareness
+			if (removed) {
+				removed.forEach((clientID) => {
+					delete this.otherMouseInfo[clientID];
+				});
+			}
 		});
 
 	}
@@ -103,10 +109,7 @@ export default class MouseTracker {
 			let mouseInfo = {
 				x: p5.mouseX * this.canvasScale + this.xTranslate,
 				y: p5.mouseY * this.canvasScale + this.yTranslate,
-				click: false,
 				holdStart: true,
-				holdEnd: false,
-				burst: false,
 				timestamp: now,
 			};
 
@@ -126,10 +129,6 @@ export default class MouseTracker {
 		let mouseInfo = {
 			x: p5.mouseX * this.canvasScale + this.xTranslate,
 			y: p5.mouseY * this.canvasScale + this.yTranslate,
-			click: false,
-			holdStart: false,
-			holdEnd: false,
-			burst: false,
 			timestamp: now,
 		};
 
@@ -153,10 +152,6 @@ export default class MouseTracker {
 		let mouseInfo = {
 			x: p5.mouseX * this.canvasScale + this.xTranslate,
 			y: p5.mouseY * this.canvasScale + this.yTranslate,
-			click: false,
-			holdStart: false,
-			holdEnd: false,
-			burst: false,
 			timestamp: now,
 		};
 
@@ -178,9 +173,6 @@ export default class MouseTracker {
 		let mouseInfo = {
 			x: p5.mouseX * this.canvasScale + this.xTranslate,
 			y: p5.mouseY * this.canvasScale + this.yTranslate,
-			click: false,
-			holdStart: false,
-			holdEnd: false,
 			burst: true,
 			timestamp: now,
 		};

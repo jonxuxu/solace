@@ -160,26 +160,28 @@ function Canvas({ yMap, awareness, onStart }) {
   }
 
 	function selfBurst(p5, clientID, mouseInfo) {
-		bursts.push({
+		console.log("self burst");
+		const burst = {
 			x: mouseInfo.x,
 			y: mouseInfo.y,
 			startTime: Date.now(),
 			clientID,
-		});
+		}
+		burst.letters = poemEngine.newBurst(burst);
+		bursts.push(burst);
 	}
 
-  function awarenessUpdate(p5, clientID, canvasInfo) {
-    const { smallRipple, bigRipple, burst, mouse, removed } = canvasInfo;
-    const now = Date.now();
-    if (burst) {
-      const letters = poemEngine.newBurst(burst);
-      bursts.push({
-        ...burst,
-        letters,
-        startTime: now,
-      });
-    }
-  }
+	function otherBurst(p5, clientID, mouseInfo) {
+		console.log("other burst");
+		const burst = {
+			x: mouseInfo.x,
+			y: mouseInfo.y,
+			startTime: Date.now(),
+			clientID,
+		}
+		burst.letters = poemEngine.newBurst(burst);
+		bursts.push(burst);
+	}
 
   function setup(p5, canvasParentRef) {
     let width = canvasParentRef.offsetWidth;
@@ -195,24 +197,6 @@ function Canvas({ yMap, awareness, onStart }) {
     poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap, p5);
     resizeWindow(p5);
     needsRotate = height > width;
-
-    awareness.on("change", ({ updated, removed }) => {
-      if (updated) {
-        const states = awareness.getStates();
-        updated.forEach((clientID) => {
-          const canvasInfo = states.get(clientID).canvasInfo;
-          if (canvasInfo) {
-            awarenessUpdate(p5, clientID, canvasInfo);
-          }
-        });
-        // Remove cursors that are no longer in the awareness
-        if (removed) {
-          removed.forEach((clientID) => {
-            delete cursors[clientID];
-          });
-        }
-      }
-    });
   }
 
   function draw(p5) {
