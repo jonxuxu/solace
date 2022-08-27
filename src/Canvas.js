@@ -306,7 +306,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       }
 
       // Draw koi
-      flock.render();
+      flock.draw();
     }
   }
 

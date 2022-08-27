@@ -1,7 +1,5 @@
 import { Vector } from "p5";
 
-const KOI_NUMBER = 20;
-
 class FlockParams {
   constructor() {
     this.maxForce = 0.08;
@@ -15,16 +13,9 @@ class FlockParams {
 
 let flockParams = new FlockParams();
 
-/*==================
-Koi
-===================*/
-
-const koiColors = ["#E95D0C", "#EEA237", "#E02D28"];
-
 class Koi {
-  constructor(p5, x, y) {
-    this.p5 = p5;
-    this.color = p5.color(p5.random(koiColors));
+  constructor(x, y, koiColor, p5) {
+    this.color = p5.color(koiColor);
     this.offsetX = p5.random(-100, 100);
     this.offsetY = p5.random(-100, 100);
     this.position = p5.createVector(x + this.offsetX, y + this.offsetY);
@@ -36,13 +27,14 @@ class Koi {
     this.baseSize = p5.int(p5.random(15, 20));
     this.bodyLength = this.baseSize * 2;
     this.body = new Array(this.bodyLength).fill({ ...this.position });
+    this.p5Ref = p5;
   }
 
   calculateDesiredSteeringForce(kois, factorType) {
-    let steering = this.p5.createVector();
+    let steering = this.p5Ref.createVector();
     let total = 0;
     for (let other of kois) {
-      let d = this.p5.dist(
+      let d = this.p5Ref.dist(
         this.position.x,
         this.position.y,
         other.position.x,
@@ -85,8 +77,8 @@ class Koi {
   separation = (kois) => this.calculateDesiredSteeringForce(kois, "separation");
 
   avoid(obstacle) {
-    let steering = this.p5.createVector();
-    let d = this.p5.dist(
+    let steering = this.p5Ref.createVector();
+    let d = this.p5Ref.dist(
       this.position.x,
       this.position.y,
       obstacle.x,
@@ -104,15 +96,15 @@ class Koi {
   }
 
   edges() {
-    if (this.position.x > this.p5.width + 50) {
+    if (this.position.x > 1920 + 50) {
       this.position.x = -50;
     } else if (this.position.x < -50) {
-      this.position.x = this.p5.width + 50;
+      this.position.x = 1920 + 50;
     }
-    if (this.position.y > this.p5.height + 50) {
+    if (this.position.y > 1080 + 50) {
       this.position.y = -50;
     } else if (this.position.y < -50) {
-      this.position.y = this.p5.height + 50;
+      this.position.y = 1080 + 50;
     }
   }
 
@@ -122,7 +114,10 @@ class Koi {
     let cohesion = this.cohesion(kois);
     let separation = this.separation(kois);
 
-    let mouseObstacle = this.p5.createVector(this.p5.mouseX, this.p5.mouseY);
+    let mouseObstacle = this.p5Ref.createVector(
+      this.p5Ref.mouseX,
+      this.p5Ref.mouseY
+    );
     let avoid = this.avoid(mouseObstacle);
 
     alignment.mult(flockParams.alignAmp);
@@ -138,7 +133,6 @@ class Koi {
   }
 
   updateBody() {
-    console.log(this.position);
     this.body.unshift({ ...this.position });
     this.body.pop();
   }
@@ -152,9 +146,8 @@ class Koi {
         size = this.baseSize * 2 - index;
       }
       this.color.setAlpha(this.bodyLength - index);
-      this.p5.fill(this.color);
-      this.p5.ellipse(b.x, b.y, size, size);
-      //   console.log(b.x, b.y, size, size);
+      this.p5Ref.fill(this.color);
+      this.p5Ref.ellipse(b.x, b.y, size, size);
     });
   }
 
@@ -167,10 +160,8 @@ class Koi {
         // fill(255, 255, 255, 50 - index)
         size = this.baseSize * 1.8 - index;
       }
-
-      this.p5.fill(200, 200, 200, 20);
-      this.p5.ellipse(b.x + 50, b.y + 50, size, size);
-      //   console.log(b.x, b.y, size, size);
+      this.p5Ref.fill(200, 200, 200, 20);
+      this.p5Ref.ellipse(b.x + 50, b.y + 50, size, size);
     });
   }
 
@@ -182,22 +173,35 @@ class Koi {
   }
 }
 
+/*==================
+  Koi
+  ===================*/
+
+const koiColors = ["#E95D0C", "#EEA237", "#E02D28"];
+/*==================
+  Sketch: setup, draw, etc.
+  ===================*/
 export default class Flock {
   flock = [];
+  koiNumber = 20;
 
   constructor(p5) {
-    this.p5 = p5;
-    for (let i = 0; i < KOI_NUMBER; i++) {
-      const centerX = p5.random(1920 - 200, 200);
-      const centerY = p5.random(1080 - 200, 200);
-      this.flock.push(new Koi(p5, centerX, centerY));
-    }
+    const centerX = p5.random(1920 - 200, 200);
+    const centerY = p5.random(1080 - 200, 200);
+
+    const color = p5.random(koiColors);
+    new Array(this.koiNumber)
+      .fill(1)
+      .map((_) => this.flock.push(new Koi(centerX, centerY, color, p5)));
   }
 
-  render() {
+  draw() {
+    // background(230);
+    // shadow
     this.flock.forEach((koi) => {
       koi.showShadow();
     });
+
     this.flock.forEach((koi) => {
       koi.edges();
       koi.flock(this.flock);
