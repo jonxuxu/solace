@@ -7,7 +7,7 @@ import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
 import MouseTracker from "./utils/mouse";
 
-const holdTime = 1;
+const holdTime = 1000;
 
 function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let gameState = "start";
@@ -142,46 +142,6 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 		cursors[clientID].holdStart = null;
 	}
 
-	/*
-    // Linearly increment the hold state until it reaches 100 in 2 seconds
-    holdTimer = setInterval(() => {
-      if (holdState < 100) {
-        holdState += 10;
-        // TODO: redundant fix
-        awareness.setLocalStateField("canvasInfo", {
-          mouse: {
-            x: p5.mouseX * canvasScale + xTranslate,
-            y: p5.mouseY * canvasScale + yTranslate,
-            holdState: holdState,
-          },
-        });
-      } else {
-        // Pop a burst of poem line
-        poemEngine.advanceLine(yMap);
-        clearInterval(holdTimer);
-        holdState = 0;
-        awareness.setLocalStateField("canvasInfo", {
-          bigRipple: {
-            x: p5.mouseX * canvasScale + xTranslate,
-            y: p5.mouseY * canvasScale + yTranslate,
-            timestamp: Date.now(), // only used to ensure uniqueness
-          },
-          burst: {
-            x: p5.mouseX * canvasScale + xTranslate,
-            y: p5.mouseY * canvasScale + yTranslate,
-            timestamp: Date.now(), // only used to ensure uniqueness
-          },
-          mouse: {
-            x: p5.mouseX * canvasScale + xTranslate,
-            y: p5.mouseY * canvasScale + yTranslate,
-            holdState: holdState,
-          },
-        });
-      }
-    }, 100);
-  }
-*/
-
   function mouseMoved(p5, clientID, mouseInfo) {
     if (!cursors[clientID]) {
 			cursors[clientID] = {
@@ -196,7 +156,6 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 
 	function selfBurst(p5, clientID, mouseInfo) {
 		poemEngine.advanceLine(yMap);
-		console.log("self burst");
 		const burst = {
 			x: mouseInfo.x,
 			y: mouseInfo.y,
@@ -212,7 +171,6 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 	}
 
 	function otherBurst(p5, clientID, mouseInfo) {
-		console.log("other burst");
 		const burst = {
 			x: mouseInfo.x,
 			y: mouseInfo.y,
