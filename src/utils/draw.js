@@ -110,7 +110,7 @@ function drawCursors(p5, cursors, myClientId) {
     // console.log(key, cursor.holdState);
     // Calculate color and size from charge state
 		let holdState = 0;
-		if (cursor.holdStart) {
+		if (cursor.chargingBurst) {
 			holdState = Math.min((now - cursor.holdStart) / 1000, holdTime);
 		}
 		let alpha = p5.map(holdState, 0, holdTime, cursorAlpha, 255);

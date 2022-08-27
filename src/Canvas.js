@@ -139,6 +139,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function selfHoldStart(p5, clientID, mouseInfo) {
+		cursors[clientID].chargingBurst = true;
     cursors[clientID].holdStart = Date.now();
     holdTimer = setTimeout(() => {
       mouseTracker.onBurst(p5);
@@ -149,10 +150,12 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
     if (!cursors[clientID]) {
       cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
     }
+		cursors[clientID].chargingBurst = true;
     cursors[clientID].holdStart = Date.now();
   }
 
   function holdEnd(p5, clientID, mouseInfo) {
+		cursors[clientID].chargingBurst = false;
     if (!cursors[clientID]) {
       cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
     }
@@ -172,6 +175,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function selfBurst(p5, clientID, mouseInfo) {
+		cursors[clientID].chargingBurst = false;
     poemEngine.tryAdvanceLine(yMap);
     const burst = {
       x: mouseInfo.x,
@@ -188,6 +192,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
   function otherBurst(p5, clientID, mouseInfo) {
+		cursors[clientID].chargingBurst = false;
     const burst = {
       x: mouseInfo.x,
       y: mouseInfo.y,
