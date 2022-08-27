@@ -16,6 +16,7 @@ const notes = [
   "/e.wav",
   "/fsharp.wav",
 ];
+const gong = "/gong.mp3";
 
 const doc = new Y.Doc();
 const wsProvider = new WebsocketProvider(
@@ -33,9 +34,14 @@ awareness.on("change", ({ updated }) => {
       // key is the clientID
       const state = states.get(key); // state is updated awareness state
       const { canvasInfo } = state;
-      if (canvasInfo && canvasInfo.bigRipple) {
-        playNote();
-      }
+			if (canvasInfo) {
+				if (canvasInfo.note) {
+					playNote();
+				}
+				if (canvasInfo.gong) {
+					playGong();
+				}
+			}
     });
   }
 });
@@ -43,6 +49,11 @@ awareness.on("change", ({ updated }) => {
 function playNote() {
   const audio = new Audio(notes[Math.floor(Math.random() * notes.length)]);
   audio.play();
+}
+
+function playGong() {
+	const audio = new Audio(gong);
+	audio.play();
 }
 
 function App() {
