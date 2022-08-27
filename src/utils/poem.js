@@ -100,7 +100,8 @@ export default class PoemEngine {
   };
 
   newBurst = (burst) => {
-    const lineDiv = document.getElementById("poem-centered").children[burst.poem];
+		console.log(`new burst ${burst.poem}, ${burst.line}`);
+    const lineDiv = document.getElementById("poem-centered").children[burst.line];
     let letters = poems[burst.poem].verses[burst.line]
       .split("")
       .map((letter, index) => {

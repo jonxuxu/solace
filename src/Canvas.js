@@ -196,6 +196,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   }
 
 	function selfBurst(p5, clientID, mouseInfo) {
+		poemEngine.advanceLine(yMap);
 		console.log("self burst");
 		const burst = {
 			x: mouseInfo.x,
