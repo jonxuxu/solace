@@ -6,6 +6,7 @@ import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
 import MouseTracker from "./utils/mouse";
+import Flock from "./utils/fish";
 
 const holdTime = 1;
 
@@ -22,6 +23,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let bursts = [];
   let showFirstLines = true;
   let burstOpacity = 255;
+  let flock = null;
 
   // Charge animation
   let holdState = 0;
@@ -36,7 +38,14 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
   let xTranslate = 0;
   let yTranslate = 0;
 
-	let mouseTracker = new MouseTracker(awareness, selfClick, selfHoldStart, holdEnd, null, selfBurst);
+  let mouseTracker = new MouseTracker(
+    awareness,
+    selfClick,
+    selfHoldStart,
+    holdEnd,
+    null,
+    selfBurst
+  );
   let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
   let prevLines = 0;
   let prevPoem = 0;
@@ -46,10 +55,10 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       if (event.status === "connected") {
         prevLines = yMap.get("currentLine");
         prevPoem = yMap.get("currentPoem");
-				console.log(prevLines, prevPoem);
+        console.log(prevLines, prevPoem);
         poemEngine.ready();
-				prevLines = -1;
-				prevPoem = 0;
+        prevLines = -1;
+        prevPoem = 0;
       }
     });
 
@@ -90,19 +99,19 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
     needsRotate = height > width;
     p5.resizeCanvas(width, height);
     poemEngine.resizeCanvas(canvasScale, xTranslate, yTranslate);
-		mouseTracker.resizeCanvas(canvasScale, xTranslate, yTranslate);
+    mouseTracker.resizeCanvas(canvasScale, xTranslate, yTranslate);
   }
 
-	function rippleOnClick(p5, clientID, mouseInfo) {
-		smallRipples.push({
-			x: mouseInfo.x,
-			y: mouseInfo.y,
-			startTime: Date.now(),
-			clientID,
-		});
-	}
+  function rippleOnClick(p5, clientID, mouseInfo) {
+    smallRipples.push({
+      x: mouseInfo.x,
+      y: mouseInfo.y,
+      startTime: Date.now(),
+      clientID,
+    });
+  }
 
-	function selfClick(p5, _, mouseInfo) {
+  function selfClick(p5, _, mouseInfo) {
     if (gameState === "start") {
       onStart();
       const fadeInterval = setInterval(() => {
@@ -115,35 +124,35 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       }, 50);
       return;
     }
-		rippleOnClick(p5, myClientId, mouseInfo);
-	}
+    rippleOnClick(p5, myClientId, mouseInfo);
+  }
 
-	function otherClick(p5, clientID, mouseInfo) {
-		rippleOnClick(p5, clientID, mouseInfo);
-	}
+  function otherClick(p5, clientID, mouseInfo) {
+    rippleOnClick(p5, clientID, mouseInfo);
+  }
 
-	function selfHoldStart(p5, clientID, mouseInfo) {
-		cursors[clientID].holdStart = Date.now();
-		holdTimer = setTimeout(() => {
-			mouseTracker.onBurst(p5);
-		}, holdTime);
-	}
+  function selfHoldStart(p5, clientID, mouseInfo) {
+    cursors[clientID].holdStart = Date.now();
+    holdTimer = setTimeout(() => {
+      mouseTracker.onBurst(p5);
+    }, holdTime);
+  }
 
-	function otherHoldStart(p5, clientID, mouseInfo) {
+  function otherHoldStart(p5, clientID, mouseInfo) {
     if (!cursors[clientID]) {
-			cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
-		}
-		cursors[clientID].holdStart = Date.now();
-	}
+      cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
+    }
+    cursors[clientID].holdStart = Date.now();
+  }
 
-	function holdEnd(p5, clientID, mouseInfo) {
-		if (!cursors[clientID]) {
-			cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
-		}
-		cursors[clientID].holdStart = null;
-	}
+  function holdEnd(p5, clientID, mouseInfo) {
+    if (!cursors[clientID]) {
+      cursors[clientID] = { x: mouseInfo.x, y: mouseInfo.y };
+    }
+    cursors[clientID].holdStart = null;
+  }
 
-	/*
+  /*
     // Linearly increment the hold state until it reaches 100 in 2 seconds
     holdTimer = setInterval(() => {
       if (holdState < 100) {
@@ -185,46 +194,46 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 
   function mouseMoved(p5, clientID, mouseInfo) {
     if (!cursors[clientID]) {
-			cursors[clientID] = {
-				interpolator: new Interpolator((point) => {
-					cursors[clientID].x = point[0];
-					cursors[clientID].y = point[1];
-				}),
-			};
-		}
+      cursors[clientID] = {
+        interpolator: new Interpolator((point) => {
+          cursors[clientID].x = point[0];
+          cursors[clientID].y = point[1];
+        }),
+      };
+    }
     cursors[clientID].interpolator.addPoint(mouseInfo);
   }
 
-	function selfBurst(p5, clientID, mouseInfo) {
-		poemEngine.advanceLine(yMap);
-		console.log("self burst");
-		const burst = {
-			x: mouseInfo.x,
-			y: mouseInfo.y,
-			poem: yMap.get("currentPoem"),
-			line: yMap.get("currentLine"),
-			startTime: Date.now(),
-			clientID,
-		}
-		if (burst.line > -1) {
-			burst.letters = poemEngine.newBurst(burst);
-			bursts.push(burst);
-		}
-	}
+  function selfBurst(p5, clientID, mouseInfo) {
+    poemEngine.advanceLine(yMap);
+    console.log("self burst");
+    const burst = {
+      x: mouseInfo.x,
+      y: mouseInfo.y,
+      poem: yMap.get("currentPoem"),
+      line: yMap.get("currentLine"),
+      startTime: Date.now(),
+      clientID,
+    };
+    if (burst.line > -1) {
+      burst.letters = poemEngine.newBurst(burst);
+      bursts.push(burst);
+    }
+  }
 
-	function otherBurst(p5, clientID, mouseInfo) {
-		console.log("other burst");
-		const burst = {
-			x: mouseInfo.x,
-			y: mouseInfo.y,
-			startTime: Date.now(),
-			clientID,
-		}
-		const { letters, line } = poemEngine.newBurst(burst);
-		burst.letters = letters;
-		burst.line = line;
-		bursts.push(burst);
-	}
+  function otherBurst(p5, clientID, mouseInfo) {
+    console.log("other burst");
+    const burst = {
+      x: mouseInfo.x,
+      y: mouseInfo.y,
+      startTime: Date.now(),
+      clientID,
+    };
+    const { letters, line } = poemEngine.newBurst(burst);
+    burst.letters = letters;
+    burst.line = line;
+    bursts.push(burst);
+  }
 
   function setup(p5, canvasParentRef) {
     let width = canvasParentRef.offsetWidth;
@@ -234,11 +243,20 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
     p5.textFont("Crimson Text");
     phoneImg = p5.loadImage("./iphone2.png");
 
-		// wait until connected?
-		mouseTracker.setupReceivers(p5, otherClick, otherHoldStart, holdEnd, mouseMoved, otherBurst);
+    // wait until connected?
+    mouseTracker.setupReceivers(
+      p5,
+      otherClick,
+      otherHoldStart,
+      holdEnd,
+      mouseMoved,
+      otherBurst
+    );
 
     resizeWindow(p5);
     needsRotate = height > width;
+
+    flock = new Flock(p5);
   }
 
   function draw(p5) {
@@ -286,6 +304,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
         p5.fill(c);
         poemEngine.drawPrevLines(p5, prevPoem, prevLines);
       }
+
+      // Draw koi
+      flock.render();
     }
   }
 
@@ -296,7 +317,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       mousePressed={mouseTracker.mousePressed}
       mouseReleased={mouseTracker.mouseReleased}
       mouseMoved={mouseTracker.mouseMoved}
-		  mouseDragged={mouseTracker.mouseMoved}
+      mouseDragged={mouseTracker.mouseMoved}
       className="Canvas"
       windowResized={resizeWindow}
     />
