@@ -87,19 +87,23 @@ function drawLetter(p5, letterInfo, burst, time) {
   p5.pop();
 }
 
-function drawBurst(p5, bursts) {
+function drawBursts(p5, bursts) {
+  console.log(bursts);
   p5.textAlign(p5.LEFT, p5.TOP);
   const now = Date.now();
   bursts.forEach((burst) => {
     const time = (now - burst.startTime) / 1000;
-    burst.letters.forEach((letter) => {
-      drawLetter(p5, letter, burst, time);
-    });
+    if (time < burst.endTime) {
+      burst.letters.forEach((letter) => {
+        drawLetter(p5, letter, burst, time);
+      });
+    }
   });
 }
 
 function drawCursors(p5, cursors, myClientId) {
   for (const [key, cursor] of Object.entries(cursors)) {
+    // console.log(key, cursor.holdState);
     // Calculate color and size from charge state
     let color = p5.color(
       255,
@@ -117,4 +121,9 @@ function drawCursors(p5, cursors, myClientId) {
   }
 }
 
-export default { drawBigRipples, drawSmallRipples, drawBurst, drawCursors };
+export default {
+  drawBigRipples,
+  drawSmallRipples,
+  drawBursts,
+  drawCursors,
+};

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Sketch from "react-p5";
 import "./App.css";
 
@@ -6,7 +6,7 @@ import DrawFns from "./utils/draw";
 import PoemEngine from "./utils/poem";
 import Interpolator from "./utils/interpolate";
 
-function Canvas({ yMap, awareness, onStart }) {
+function Canvas({ yStatus, yMap, awareness, onStart }) {
   let gameState = "start";
   let needsRotate = false;
 
@@ -23,7 +23,7 @@ function Canvas({ yMap, awareness, onStart }) {
   let holdTimer = null;
 
   const myClientId = awareness.clientID;
-  let cursors = { [myClientId]: { x: 0, y: 0 } };
+  let cursors = { [myClientId]: { x: 0, y: 0, holdState: 0 } };
 
   let stale = 0;
   let debounce = false;
@@ -31,7 +31,14 @@ function Canvas({ yMap, awareness, onStart }) {
   let xTranslate = 0;
   let yTranslate = 0;
 
-  let poemEngine = null;
+  let poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap);
+
+  useEffect(() => {
+    if (yStatus === "connected") {
+      console.log("set poem engine");
+      poemEngine.ready();
+    }
+  }, [yStatus]);
 
   // Adjust canvas scale and translate based on screen size
   function resizeWindow(p5) {
@@ -139,7 +146,7 @@ function Canvas({ yMap, awareness, onStart }) {
     stale++;
   }
 
-  function awarenessUpdate(p5, clientID, canvasInfo) {
+  function awarenessUpdate(clientID, canvasInfo) {
     const { smallRipple, bigRipple, burst, mouse, removed } = canvasInfo;
     const now = Date.now();
     if (smallRipple) {
@@ -158,6 +165,7 @@ function Canvas({ yMap, awareness, onStart }) {
       );
     }
     if (burst) {
+      console.log("burst", burst);
       const letters = poemEngine.newBurst(burst);
       bursts.push({
         ...burst,
@@ -167,6 +175,7 @@ function Canvas({ yMap, awareness, onStart }) {
     }
 
     if (mouse) {
+      // console.log("mouse event", mouse);
       // Add to spline if not own cursor
       if (!cursors[clientID]) {
         cursors[clientID] = {};
@@ -184,10 +193,13 @@ function Canvas({ yMap, awareness, onStart }) {
         cursors[clientID].interpolator.addPoint(mouse);
       }
       cursors[clientID].holdState = mouse.holdState;
+      //console.log("mouse here", cursors);
+      // console.log(clientID, cursors[clientID].holdState);
     }
   }
 
   function setup(p5, canvasParentRef) {
+    console.log("setup called");
     let width = canvasParentRef.offsetWidth;
     let height = canvasParentRef.offsetHeight;
     p5.createCanvas(width, height).parent(canvasParentRef);
@@ -195,7 +207,6 @@ function Canvas({ yMap, awareness, onStart }) {
     p5.textFont("Crimson Text");
     phoneImg = p5.loadImage("./iphone2.png");
 
-    poemEngine = new PoemEngine(canvasScale, xTranslate, yTranslate, yMap, p5);
     resizeWindow(p5);
     needsRotate = height > width;
 
@@ -205,7 +216,7 @@ function Canvas({ yMap, awareness, onStart }) {
         updated.forEach((clientID) => {
           const canvasInfo = states.get(clientID).canvasInfo;
           if (canvasInfo) {
-            awarenessUpdate(p5, clientID, canvasInfo);
+            awarenessUpdate(clientID, canvasInfo);
           }
         });
         // Remove cursors that are no longer in the awareness
@@ -247,6 +258,11 @@ function Canvas({ yMap, awareness, onStart }) {
       p5.noStroke();
       cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
       cursors[myClientId].y = p5.mouseY * canvasScale + yTranslate;
+      // console.log(
+      //   "call drawcursors",
+      //   myClientId,
+      //   cursors[myClientId].holdState
+      // );
       DrawFns.drawCursors(p5, cursors, myClientId);
 
       // Draw ripples
@@ -257,7 +273,8 @@ function Canvas({ yMap, awareness, onStart }) {
       // Draw bursts
       p5.fill(255);
       p5.noStroke();
-      DrawFns.drawBurst(p5, bursts);
+      DrawFns.drawBursts(p5, bursts);
+      poemEngine.drawPrevLines(p5);
     }
   }
 

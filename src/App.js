@@ -24,9 +24,7 @@ const wsProvider = new WebsocketProvider(
   doc
 );
 
-wsProvider.on("status", (event) => {
-  console.log(event.status); // logs "connected" or "disconnected"
-});
+let yStatus = null;
 
 const awareness = wsProvider.awareness;
 
@@ -52,6 +50,7 @@ function playNote() {
 function App() {
   const [audio] = useState(new Audio(deepSynth));
   const [audioVolume, setAudioVolume] = useState(0);
+  const [yStatus, setYStatus] = useState(null);
 
   useEffect(() => {
     audio.addEventListener("timeupdate", function () {
@@ -64,12 +63,18 @@ function App() {
     audio.volume = 0;
   }, []);
 
+  wsProvider.on("status", (event) => {
+    console.log(event.status); // logs "connected" or "disconnected"
+    setYStatus(event.status);
+  });
+
   return (
     <MainDiv>
       <Poem>
         <div id="poem-centered"></div>
       </Poem>
       <Canvas
+        yStatus={yStatus}
         yMap={doc.getMap("gameDoc")}
         awareness={awareness}
         onStart={() => {
