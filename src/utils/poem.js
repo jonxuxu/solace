@@ -1,6 +1,6 @@
 import poems from ".././poems.json";
 
-const BURST_TIMEOUT = 5000;
+const LINE_TIMEOUT = 5000;
 
 function getOffset(el) {
   var body, _x, _y;
@@ -35,16 +35,7 @@ export default class PoemEngine {
     this.yMap = ym;
     this.advanceTimer = setTimeout(() => {
       this.canAdvance = true;
-    }, BURST_TIMEOUT);
-
-    ym.observe((yMapEvent) => {
-      if (yMapEvent.keysChanged.has("currentPoem")) {
-        this.poemUpdated();
-      }
-      if (yMapEvent.keysChanged.has("currentLine")) {
-        this.lineUpdated();
-      }
-    });
+    }, LINE_TIMEOUT);
   }
 
   ready() {
@@ -65,11 +56,7 @@ export default class PoemEngine {
     this.canAdvance = false;
     this.advanceTimer = setTimeout(() => {
       this.canAdvance = true;
-    }, BURST_TIMEOUT);
-  }
-
-  poemUpdated() {
-    // TODO
+    }, LINE_TIMEOUT);
   }
 
   resizeCanvas(cs, xt, yt) {
@@ -109,11 +96,15 @@ export default class PoemEngine {
   };
 
   newBurst = (burst) => {
+    if (this.yMap.get("currentLine") == -1) {
+      return [];
+    }
     // console.log(this.yMap.get("currentPoem"), this.yMap.get("currentLine"));
     const lineDiv =
       document.getElementById("poem-centered").children[
         this.yMap.get("currentLine")
       ];
+    console.log(this.yMap.get("currentPoem"), this.yMap.get("currentLine"));
     let letters = poems[this.yMap.get("currentPoem")].verses[
       this.yMap.get("currentLine")
     ]
@@ -153,6 +144,7 @@ export default class PoemEngine {
   };
 
   advanceLine = () => {
+    console.log("advancing from line " + this.yMap.get("currentLine"));
     const currentPoem = this.yMap.get("currentPoem");
     const currentLine = this.yMap.get("currentLine");
     // set default poem if not defined in shared map
@@ -161,17 +153,13 @@ export default class PoemEngine {
     } else {
       this.yMap.set("currentLine", -1);
       this.yMap.set("currentPoem", (currentPoem + 1) % poems.length);
-      // TODO: current poem should fade away
-      this.yMap.set("currentPoem", currentPoem);
     }
+    console.log("to line " + this.yMap.get("currentLine"));
   };
 
-  drawPrevLines = (p5, prevLines) => {
-    const currentPoem = this.yMap.get("currentPoem");
-    const currentLine = this.yMap.get("currentLine");
+  drawPrevLines = (p5, prevPoem, prevLines) => {
     const poemDiv = document.getElementById("poem-centered");
     if (poemDiv.children.length > 0) {
-      p5.fill(255);
       p5.noStroke();
       p5.textSize(32);
 
@@ -179,7 +167,7 @@ export default class PoemEngine {
         const { top, left } = getOffset(poemDiv.children[i].children[0]);
         const x = left * this.canvasScale + this.xTranslate;
         const y = top * this.canvasScale + this.yTranslate;
-        p5.text(poems[currentPoem].verses[i], x, y);
+        p5.text(poems[prevPoem].verses[i], x, y);
       }
     }
   };
