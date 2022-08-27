@@ -277,6 +277,9 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
       p5.scale(1 / canvasScale);
       p5.translate(-xTranslate, -yTranslate);
 
+      // Draw koi
+      flock.draw();
+
       // Draw cursors
       p5.noStroke();
       cursors[myClientId].x = p5.mouseX * canvasScale + xTranslate;
@@ -299,9 +302,6 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
 				*/
         poemEngine.drawPrevLines(p5, prevPoem, prevLines);
       }
-
-      // Draw koi
-      flock.draw();
     }
   }
 
