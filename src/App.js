@@ -64,7 +64,7 @@ function App() {
       <Poem>
         <div id="poem-centered"></div>
       </Poem>
-      <Canvas
+      <GameCanvas
         wsProvider={wsProvider}
         yMap={doc.getMap("gameDoc")}
         awareness={awareness}
@@ -112,7 +112,6 @@ const MainDiv = styled.div`
   background-color: black;
   width: 100%;
   height: 100%;
-  overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -128,6 +127,7 @@ const Poem = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   z-index: -2;
   display: flex;
   align-items: center;
@@ -135,4 +135,9 @@ const Poem = styled.div`
   color: white;
   font-size: 32px;
   font-family: "Crimson Text", serif;
+`;
+
+const GameCanvas = styled(Canvas)`
+  width: 100%;
+  height: 100%;
 `;
