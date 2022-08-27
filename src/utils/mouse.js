@@ -193,7 +193,6 @@ export default class MouseTracker {
     if (this.selfBurst) {
       this.selfBurst(p5, this.myClientID, mouseInfo);
     }
-		this.awareness.setLocalStateField("canvasInfo", { gong: true });
     this.awareness.setLocalStateField("mouse", mouseInfo);
   };
 }

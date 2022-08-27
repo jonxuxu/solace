@@ -63,6 +63,7 @@ function Canvas({ wsProvider, yMap, awareness, onStart }) {
         if (yMapEvent.keysChanged.has("currentPoem")) {
           console.log("poem changed");
 					poemFading = true;
+					this.awareness.setLocalStateField("canvasInfo", { gong: true });
           // New poem, clear bursts and prev lines
           const decreaseInterval = setInterval(() => {
             if (burstOpacity > 5) {
